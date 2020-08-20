@@ -1,0 +1,191 @@
+import numpy as np
+from utils import unique2d, find_extrema, plot_point_cloud, find_center
+from scipy.ndimage import generate_binary_structure, binary_erosion
+from itertools import combinations
+
+
+def create_crani_grid(parameters, offst, stepnum=5):
+    """
+    crani defined by four points (a,b,c, d) create a grid connecting the points by
+    :param parameters:
+    :param offst the number of voxels from the border you want to start the grid coordinates (important because if the
+                    point travels to the edge of the craniotomy -- techincally, it will be outside of the bounds b/c of
+                    the radius of the cylinder
+    :type  offst int
+    :param stepnum: number of steps to take from corner points when creating the grid
+    :return:
+    """
+
+    #find b and c which are defined as the two points nearest to a
+
+
+    origin = find_center(parameters)
+
+    def sort_corners(param):
+        """
+        Find the pair of coordinates that have the longest distance, those will be defined as A and D, then find B and C
+        # WARNING: This will fail with equilateral triangles
+        :param param:
+        :return:
+        """
+
+        combine = np.array(list(combinations(param, 2)))
+
+        dist = 0
+        for e in combine:
+            d = np.linalg.norm(e[0] - e[1])
+            if d > dist:
+                pair = e
+                dist = d
+
+        _a = pair[0]
+        _d = pair[1]
+
+        # find which parts of param are not equal to a or d
+        bc_loc = np.all(np.logical_and(param != _a, param != _d), axis=1)
+        _b, _c = param[bc_loc]
+
+        return _a, _b, _c, _d
+
+    a, b, c, d  = sort_corners(parameters)
+
+    def create_steps(p1, p2, step_num=stepnum, offset=None):
+        """ Create stepnum steps between p1 and p2 by calculating the unit vector between the two points and following the
+        vector"""
+
+        # create vector, step and unit vector (vhat)
+        v = p2-p1
+        step = np.linalg.norm(v)/step_num
+        vhat = v/np.linalg.norm(v)
+
+        if offset:
+            # move p1 away from the boundary of crani by offset value
+            p1_off = p1 + offset * vhat
+            p1 = np.array([int(np.around(x)) for x in p1_off])
+
+            p2_off = p2 - offset * vhat
+            p2 = np.array([int(np.around(x)) for x in p2_off])
+
+        pts = [p1]
+        for j in range(1, step_num):
+            # the new point is defined by i * the step * the unit vector (will create enough steps)
+            p_new = p1 + j*step * vhat
+            new_p = np.array([int(np.around(x)) for x in p_new])
+            pts.append(new_p)
+        pts.append(p2)
+        return pts
+
+    # create the steps for all the edges of the square (ab, ac, bd, cd)
+    ab = create_steps(a, b, offset=offst)
+    ac = create_steps(a, c, offset=offst)
+    bd = create_steps(b, d, offset=offst)
+    cd = create_steps(c, d, offset=offst)
+
+    output = ab
+    # go down the line from ac and bd and create steps between ac[i] and bd[i] for i in range(stepnum)
+    for i in range(1, stepnum):
+        arr = create_steps(ac[i], bd[i])
+        output = np.vstack((output, arr))
+    output = np.vstack((output, cd))
+    output = unique2d(output)
+
+    return output
+
+
+
+def find_edge_points(target):
+    """
+    Finds the boundary points of the target by eroding it by three iterations
+    Then it finds the extrema of x,y,z points
+
+    :param target:
+    :return:
+    """
+
+    # erode 2 times
+    struct = generate_binary_structure(3, 1)
+    eroded = binary_erosion(target, structure=struct, iterations=2).astype(int)
+    boundary = eroded - binary_erosion(eroded, structure=struct).astype(int)
+
+    # key points:
+    key_points = []
+    coords = np.array(np.where(boundary == 1)).T
+
+    low = find_extrema(coords, 'min')
+    high = find_extrema(coords, 'max')
+
+    for d in [[0, 1, 2], [2, 0, 1], [1, 2, 0]]:
+
+        # find low
+        low_dim1 = coords[coords[:, d[0]] == low[d[0]]]
+
+        max_dim2 = low_dim1[low_dim1[:, d[1]] == np.max(low_dim1[:, d[1]])]
+        max_dim3 = max_dim2[max_dim2[:, d[2]] == np.max(max_dim2[:, d[2]])][0]
+        key_points.append(max_dim3)
+        min_dim3 = max_dim2[max_dim2[:, d[2]] == np.min(max_dim2[:, d[2]])][0]
+        key_points.append(min_dim3)
+
+        min_dim2 = low_dim1[low_dim1[:, d[1]] == np.min(low_dim1[:, d[1]])]
+        max_dim3 = min_dim2[min_dim2[:, d[2]] == np.max(min_dim2[:, d[2]])][0]
+        key_points.append(max_dim3)
+        min_dim3 = min_dim2[min_dim2[:, d[2]] == np.min(min_dim2[:, d[2]])][0]
+        key_points.append(min_dim3)
+
+        # find high
+        high_dim1 = coords[coords[:, d[0]] == high[d[0]]]
+
+        max_dim2 = high_dim1[high_dim1[:, d[1]] == np.max(high_dim1[:, d[1]])]
+        max_dim3 = max_dim2[max_dim2[:, d[2]] == np.max(max_dim2[:, d[2]])][0]
+        key_points.append(max_dim3)
+        min_dim3 = max_dim2[max_dim2[:, d[2]] == np.min(max_dim2[:, d[2]])][0]
+        key_points.append(min_dim3)
+
+        min_dim2 = high_dim1[high_dim1[:, d[1]] == np.min(high_dim1[:, d[1]])]
+        max_dim3 = min_dim2[min_dim2[:, d[2]] == np.max(min_dim2[:, d[2]])][0]
+        key_points.append(max_dim3)
+        min_dim3 = min_dim2[min_dim2[:, d[2]] == np.min(min_dim2[:, d[2]])][0]
+        key_points.append(min_dim3)
+
+    plot = False
+    if plot:
+        pts = np.vstack(tuple(x for x in key_points))
+        plot_point_cloud(np.where(boundary == 1), pts.T)
+
+    key_points = unique2d(np.array(key_points))
+
+    return key_points
+
+def convert_ijk_to_RAS(hdr, pt):
+
+    # turn into the [x,y,z, 1] format
+    if pt.shape == (3,):
+        pt = np.concatenate((pt, [1])).reshape(-1, 1)
+
+    if pt.shape != (4,1):
+        return ValueError('Point shape is {} but needs to be (4,1))'.format(pt.shape))
+
+    spacing = np.hstack((hdr['space directions'].T, hdr['space origin'].reshape(-1, 1)))
+    ijk_to_lps = np.vstack((spacing, [0, 0, 0, 1]))
+    lps_to_ras = np.diag([-1, -1, 1, 1])
+    ijk_to_ras = np.matmul(lps_to_ras, ijk_to_lps)
+    x_pt = np.matmul(ijk_to_ras, pt)
+    return x_pt.flatten()[:-1]
+
+
+def convert_RAS_to_ijk(hdr, pt):
+
+    # turn into the [x,y,z, 1] format
+    if pt.shape == (3,):
+        pt = np.concatenate((pt, [1])).reshape(-1,1)
+
+    if pt.shape != (4, 1):
+        return ValueError('Point shape is {} but needs to be (4,1))'.format(pt.shape))
+
+    spacing = np.hstack((hdr['space directions'].T, hdr['space origin'].reshape(-1, 1)))
+    ijk_to_lps = np.vstack((spacing, [0, 0, 0, 1]))
+    lps_to_ras = np.diag([-1, -1, 1, 1])
+    ijk_to_ras = np.matmul(lps_to_ras, ijk_to_lps)
+    ras_to_ijk = np.linalg.inv(ijk_to_ras)
+    x_pt = np.round(np.matmul(ras_to_ijk, pt))
+    return x_pt.flatten()[:-1]
+
