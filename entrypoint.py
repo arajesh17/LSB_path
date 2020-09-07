@@ -54,17 +54,22 @@ class EntryPoint:
 
         # MCF
         MCF_RAS = f.loc[f['desc'] == 'MCF'][['x', 'y', 'z']].values
-        MCF_ijk = np.array([convert_RAS_to_ijk(hdr, x) for x in MCF_RAS])
+        MCF_ijk = np.array([convert_RAS_to_ijk(self.hdr, x) for x in MCF_RAS])
 
         # RS
         RS_RAS = f.loc[f['desc'] == 'RS'][['x', 'y', 'z']].values
-        RS_ijk = np.array([convert_RAS_to_ijk(hdr, x) for x in RS_RAS])
+        RS_ijk = np.array([convert_RAS_to_ijk(self.hdr, x) for x in RS_RAS])
+
+        #debugging to set an negative values to zero in case fiducials are placed outside of range
+        # TODO build the capabilty to pad image in the zero plane so that the images can extend if fidicuals are placed below
+        MCF_ijk[np.where(MCF_ijk < 0)] = 0
+        RS_ijk[np.where(RS_ijk < 0)] = 0
 
         return MCF_ijk, RS_ijk
 
 import nrrd
 
-im, hdr = nrrd.read('C:\\Users\\anand\\OneDrive - UW\\LSB_cohort\\pt_6\\601 AX 3D B FFE IACs_1.nrrd')
-f = 'C:\\Users\\anand\\OneDrive - UW\\LSB_cohort\\pt_6\\f.fcsv'
-ep = EntryPoint(f, hdr)
-ep.from_fiducials()
+#im, hdr = nrrd.read('C:\\Users\\anand\\OneDrive - UW\\LSB_cohort\\pt_21\\601 AX 3D BFFE THIN.nrrd')
+#f = 'C:\\Users\\anand\\OneDrive - UW\\LSB_cohort\\pt_21\\Craniotomy_Markers.fcsv'
+#ep = EntryPoint(f, hdr)
+#ep.from_fiducials()

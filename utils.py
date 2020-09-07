@@ -6,6 +6,22 @@ from mpl_toolkits.mplot3d import Axes3D
 from weights import microscope_dict
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 import matplotlib as mpl
+import json
+
+
+class NumpyEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        if isinstance(obj, np.int32):
+            return np.int(obj)
+        return json.JSONEncoder.default(self, obj)
+
+def load_json(file):
+
+    with open(file, 'r') as fp:
+        d = json.load(fp)
+    return d
 
 
 def find_center(coordinates):
@@ -199,7 +215,6 @@ def plot_heat_map(targ, crani, min_dist, title, bounds=[0,30]):
 
 import pandas as pd
 
-#df = pd.read_pickle('dummy.pkl')
 #T = df.loc[0,'targ']
 #C = df.loc[0, 'crani']
 #scores = df.loc[0, 'score']
@@ -331,22 +346,3 @@ def in2d_unsorted(arr1, arr2, axis=1, consider_sort=False):
     idx = sorter[arr3.searchsorted(arr4, sorter=sorter)]
 
     return idx
-
-def pad_seg_data(seg_data, img_spacing, micro_dict=microscope_dict, ax=2):
-    """
-    Pads the segmentation data in the specific axis dimension
-
-    :param seg_data: segmentation data
-    :param img_spacing:
-    :param mico_dict: dictionary for the microscope data
-    :param ax: the axis along which we pad the image
-    :return:
-    """
-
-    pad = int(micro_dict["Radius"]/img_spacing[ax]/2)
-
-#    pad_im = np.hstack((seg_data, np.tile(seg_data[:, :, [-1]], pad)))
-    pad_im = np.repeat(seg_data, [1]*(seg_data.shape[ax]-1) + [pad], axis=ax)
-
-    return pad_im
-

@@ -19,7 +19,7 @@ class Cylinder(object):
 
     def create_shape(self, num=20):
         """
-        Creates the
+        Creates the Cylinder shape
         :param num:
         :return:
         """
@@ -35,7 +35,7 @@ class Cylinder(object):
 
         x_offset = x_max - tumor_center_rot_to_x_axis[0]
 
-        # generate points for the disc in the x plane #todo check logic here
+        # generate points for the disc in the x plane #todo make the radius a passable parameter
         y_circle, z_circle = create_circle(self.radii[0] / self.spacing[1], self.radii[0] / self.spacing[2],
                                            n=num)  # calibrate radius based off of spacing
         y_circle2, z_circle2 = create_circle(self.radii[1] / self.spacing[1], self.radii[1] / self.spacing[2],

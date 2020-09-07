@@ -49,13 +49,46 @@ from costfunction import array_to_coords
 #result = CostFunction.costfunct_dictionary(initial_guess, RS_coords, seg_data, lut,
 #                                           dist_maps, gradient_maps, img_spacing)
 
-
-import matplotlib.pyplot as plt
-
+from glob import glob
+from os.path import join
+from loaddata import LoadData
 import numpy as np
-from utils import unique2d
-parameters = np.array([[331, 419, 1],
-                       [396, 330, 2],
-                       [341, 476, 52],
-                       [413, 395, 57]])
+from coordinates import find_edge_points
+
+pt_list = ['9']
+wd = 'C:\\Users\\anand\\OneDrive - UW\\LSB_cohort'
+
+for pt in pt_list:
+    # path to the loaded data
+    img_pth = glob(join(wd, 'pt_{}\\*FFE*.nrrd'.format(pt)))[0]
+    seg_pth = glob(join(wd, 'pt_{0}\\*{0}*egmentation-label.nrrd'.format(pt)))[0]
+    lup_tbl = glob(join(wd, 'pt_{0}\\*{0}*egmentation-label_ColorTable.ctbl'.format(pt)))[0]
+    fcsv = join(wd, 'pt_{}\\Craniotomy_Markers.fcsv'.format(pt))
+
+    # outputted files
+
+    MCF_pth = 'C:\\Users\\anand\\OneDrive - UW\\LSB_cohort\\pt_{0}\\pt_{0}_MCF.csv'.format(pt)
+    RS_pth = 'C:\\Users\\anand\\OneDrive - UW\\LSB_cohort\\pt_{0}\\pt_{0}_RS.csv'.format(pt)
+
+
+    seg_data, lut = LoadData.load_segmentation(seg_pth, lup_tbl)
+    im, hdr = LoadData.load_image(img_pth)
+    img_spacing = np.linalg.norm(hdr['space directions'],
+                                 axis=1)  # slice spacing is defined as the normalized vector of the space transformation matrix
+
+    # get edge points
+    out_im = np.zeros(im.shape)
+    targ = binarize_segmentation(seg_data, lut['Target'])
+    struct = np.ones((int(np.rint(1 / img_spacing[0])),
+                      int(np.rint(1 / img_spacing[1])),
+                      int(np.rint(1 / img_spacing[2]))))
+    edge = find_edge_points(targ, struct)
+
+    for ky in edge:
+        out_im[ky[0], ky[1], ky[2]] = 1
+
+    # save the new targets
+    out_pth = join(wd, 'pt_{}\\target_scaled_iter.nrrd'.format(pt))
+    nrrd.write(out_pth, out_im, hdr)
+
 

@@ -7,6 +7,7 @@ import numpy as np
 # 2 find the group which they belong to
 # 3 then create deformability map for them
 
+
 def create_gradient_map(lut, data, img_spacing, group_table= LSB_class_group):
     """ Create gradient map"""
 

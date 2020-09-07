@@ -42,7 +42,8 @@ def create_crani_grid(parameters, offst, stepnum=5):
         _d = pair[1]
 
         # find which parts of param are not equal to a or d
-        bc_loc = np.all(np.logical_and(param != _a, param != _d), axis=1)
+        ad_loc = np.logical_or(np.all(param == _d, axis=1), np.all(param == _a, axis=1))
+        bc_loc = [not x for x in ad_loc]
         _b, _c = param[bc_loc]
 
         return _a, _b, _c, _d
@@ -93,23 +94,28 @@ def create_crani_grid(parameters, offst, stepnum=5):
 
 
 
-def find_edge_points(target):
+def find_edge_points(target, struct, iter=1):
     """
     Finds the boundary points of the target by eroding it by three iterations
     Then it finds the extrema of x,y,z points
 
     :param target:
+    :param struct: structure of the kernel to apply for erosion
+    :param iter: int number of iterations to erode
     :return:
     """
 
-    # erode 2 times
-    struct = generate_binary_structure(3, 1)
-    eroded = binary_erosion(target, structure=struct, iterations=2).astype(int)
-    boundary = eroded - binary_erosion(eroded, structure=struct).astype(int)
+    # erode 1 time but with a scaled structure reflecting the diameter of the cylinders that will be access channels
+
+    for i in range(iter):
+        eroded = binary_erosion(target, structure=struct, iterations=iter).astype(int)
+        if len(np.where(eroded != 0)[0]) == 0: # make sure you don't iterate so many times it shirnks the target to nothing
+            break
+        target = eroded
 
     # key points:
     key_points = []
-    coords = np.array(np.where(boundary == 1)).T
+    coords = np.array(np.where(target == 1)).T
 
     low = find_extrema(coords, 'min')
     high = find_extrema(coords, 'max')
@@ -149,7 +155,7 @@ def find_edge_points(target):
     plot = False
     if plot:
         pts = np.vstack(tuple(x for x in key_points))
-        plot_point_cloud(np.where(boundary == 1), pts.T)
+        plot_point_cloud(np.where(target == 1), pts.T)
 
     key_points = unique2d(np.array(key_points))
 
@@ -189,3 +195,33 @@ def convert_RAS_to_ijk(hdr, pt):
     x_pt = np.round(np.matmul(ras_to_ijk, pt))
     return x_pt.flatten()[:-1]
 
+def pad_seg_data(seg_data, crani_coords, ax=2):
+    """
+    Pads the segmentation data in the specific axis dimension
+
+    :param seg_data: segmentation data
+    :param  crani_coords: the coordinates of the craniotomy
+    :return:
+    """
+
+    # check if the crani coords are within the geometry of the seg_data
+    upper = 0
+    lower = 0
+    for pts in crani_coords:
+        if np.max(crani_coords[:, ax]) > upper:
+            upper = np.max(crani_coords[:, ax])
+        if np.min(crani_coords[:, ax]) < lower:
+            lower = np.min(crani_coords[:, ax])
+
+    upper_pad = 0
+    if upper >= seg_data.shape[ax]:
+        upper_pad = upper + 1 - seg_data.shape[ax]
+
+    pad_im = np.repeat(seg_data, [1]*(seg_data.shape[ax]-1) + [upper_pad], axis=ax)
+
+    return pad_im
+
+#import nrrd
+#im, hdr = nrrd.read('C:\\Users\\anand\\OneDrive - UW\\LSB_cohort\\pt_6\\601 AX 3D B FFE IACs_1.nrrd')
+#padded = pad_seg_data(im, np.array([[512, 512, 100]]))
+#nrrd.write('C:\\Users\\anand\\OneDrive - UW\\LSB_cohort\\pt_6\\padded.nrrd', padded, hdr)
