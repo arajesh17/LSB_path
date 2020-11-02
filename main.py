@@ -11,7 +11,7 @@ import numpy as np
 from os.path import join
 import nrrd
 
-pt_list = ['6']
+pt_list = ['9']
 wd = 'C:\\Users\\anand\\OneDrive - UW\\LSB_cohort'
 
 for pt in pt_list:
@@ -45,7 +45,6 @@ for pt in pt_list:
     nrrd.write(pad_pth, im_pad, hdr)
 
     # create deformations
-    # TODO add coch_SCC to the vascular for critical structure_distance
     gradient_maps = create_gradient_map(lut, seg_data, img_spacing)
 
     # create distance maps
@@ -57,10 +56,10 @@ for pt in pt_list:
         group_dist = dm.cdist("euclidean")
         dist_maps[name] = group_dist
 
-    RS_cf = CostFunc(RS_entry, seg_data, lut, dist_maps, gradient_maps, img_spacing)
-    RS_cf.limit_cost()
-    RS_cf.save_dataframe(RS_pth)
-
     MCF_cf = CostFunc(MCF_entry, seg_data, lut, dist_maps, gradient_maps, img_spacing)
     MCF_cf.limit_cost()
     MCF_cf.save_dataframe(MCF_pth)
+
+    RS_cf = CostFunc(RS_entry, seg_data, lut, dist_maps, gradient_maps, img_spacing)
+    RS_cf.limit_cost()
+    RS_cf.save_dataframe(RS_pth)

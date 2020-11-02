@@ -17,18 +17,11 @@ class LoadData:
         """
         data, hdr = nrrd.read(pth)
 
-        replacement = {"PSSC": "PSCC", "LSSC": "LSCC", "SSSC": "SSCC"}
         with open(lookuptable) as f:
             label_dict = {}
             for line in f.readlines()[2:]:
                 line = line.split(' ')
                 label_dict[line[1]] = int(line[0])
-#
-#        keys = ["Brain", "Brain_Stem", "Mastoid", "Target", "Nerve", "Cochlea", "PSCC", "LSCC", "SSCC", "Carotid",
-#                "Jugular", "Sigmoid_Sinus", "Tissue"]
-#        for k in keys:
-#            if k not in label_dict.keys():
-#                raise ValueError("The label {} was not included in the segmentation at {}".format(k, pth))
 
         return data, label_dict
 

@@ -82,7 +82,6 @@ class CostFunc:
         out_dict = {}
 
         # get deformable scores
-        def_scores = []
         def_group = [k for k, v in self.group_table.items() if v["Class"] == "Deformable"]
         for group in def_group:
             def_grad = self.def_dict[group]
@@ -90,7 +89,6 @@ class CostFunc:
             out_dict[group] = [def_intersect, np.sum(np.logical_and(def_grad, cyl))]
 
         # get removable structures
-        remov_scores = []
         for name, remov_struct in self.remov_dict.items():
             remov_intersect = check_intersect(remov_struct, cyl)
             out_dict[name] = [remov_intersect * self.group_table[name]["Weight"], remov_intersect]
@@ -117,11 +115,15 @@ class CostFunc:
         target_df = pd.DataFrame()
 
         # map each target to each craniotomy
-        for tar_idx, tar_pt in enumerate(target_pts):
+        for tar_idx, tar_pt in enumerate(target_pts[:1]):
+
+            tar_pt = np.array([260, 282, 33])
 
             crani_df = pd.DataFrame()
 
             for crani_idx, crani_pt in enumerate(crani_pts):
+
+                crani_pt = np.array([376, 209, 73])
 
                 # create 1 voxel cylinder which represents minimum path
                 cyl = Cylinder(crani_pt, tar_pt,

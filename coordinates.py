@@ -159,7 +159,7 @@ def find_edge_points(target, struct, iter=1):
 
     key_points = unique2d(np.array(key_points))
 
-    return key_points
+    return key_points[::1]
 
 def convert_ijk_to_RAS(hdr, pt):
 

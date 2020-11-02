@@ -44,7 +44,7 @@ def correct_df(df):
     """
 
     df['crani'] = df['crani'].apply(correct_numpy_array)
-    df['cost'] = df['cost'].apply(correct_1d_array)
+    df['cost'] = df['cost'].apply(correct_1d_array, type=np.float)
     df['target'] = df['target'].apply(correct_1d_array)
     for col in df.columns.values[4:]:
         df[col] = df[col].apply(correct_numpy_array, dim=2, t=float)
@@ -164,7 +164,9 @@ def create_target_heatmap(fname, geometry):
         target = df.loc[idx, 'target']
         scores = df.loc[idx, 'cost']
         heat = np.sum(scores != np.inf)/ len(scores) + 0.01
-        im[target[0], target[1], target[2]] = heat
+        im[target[0], target[1], target[2]] = 1
+        im[binary_dilation(im)] = heat
+
         seg.append(im)
 
     # create 4d image
@@ -175,20 +177,23 @@ def create_target_heatmap(fname, geometry):
 def create_spider_map(fname, target, geometry, spacing, crani_pos = []):
     """
     Creates the spider map with each of the entrypoints of the craniotomy and the target
+    :param
     :return:
     """
+
 
     seg = [] # give option to run the code when crani_pos is defined
     if len(crani_pos) >= 1:
 
-        cyl_im = np.zeros(geometry)
-        cyl = Cylinder(crani_pos, target, limit_dict['cyl_radius'], limit_dict['cyl_radius'], limit_dict['cyl_radius'],
-                       geometry, spacing)
-        cyl.create_shape()
-        cyl_im[np.where(cyl.voxel == 1)] = 1
-        seg.append(cyl_im)
+        #cyl_im = np.zeros(geometry)
+        #cyl = Cylinder(crani_pos, target, limit_dict['cyl_radius'], limit_dict['cyl_radius'], limit_dict['cyl_radius'],
+        #               geometry, spacing)
+        #cyl.create_shape()
+        #cyl_im[np.where(cyl.voxel == 1)] = 1
+        #seg.append(cyl_im)
 
         cone_im = np.zeros(geometry)
+        spacing = np.array([1, 1, 1])
         cone = Cylinder(crani_pos, target, limit_dict['crani_radius'], limit_dict['crani_radius'] / 2,
                         limit_dict['cyl_radius'], geometry, spacing)
         cone.create_shape()
@@ -209,14 +214,7 @@ def create_spider_map(fname, target, geometry, spacing, crani_pos = []):
             break
 
     # iterate through each crani point and create a cylinder
-    for idx, crani in enumerate(row[1]['crani']):
-
-        cyl_im = np.zeros(geometry)
-        cyl = Cylinder(crani, target, limit_dict['cyl_radius'], limit_dict['cyl_radius'] , limit_dict['cyl_radius'],
-                       geometry, spacing)
-        cyl.create_shape()
-        cyl_im[np.where(cyl.voxel == 1)] = row['cost'][idx]
-        seg.append(cyl_im)
+    for idx, crani in enumerate(row['crani']):
 
         cone_im = np.zeros(geometry)
         cone = Cylinder(crani, target, limit_dict['crani_radius'], limit_dict['crani_radius']/2,
@@ -232,7 +230,7 @@ def create_spider_map(fname, target, geometry, spacing, crani_pos = []):
 
 # set tunable variables
 wd = 'C:\\Users\\anand\\OneDrive - UW\\LSB_cohort\\'
-pt = '6'
+pt = '25'
 
 for app in ['MCF']:
     # set the variables for funsie
@@ -250,22 +248,21 @@ for app in ['MCF']:
                                  axis=1)  # slice spacing is defined as the normalized vector of the space transformation matrix
     geo = im.shape
 
-    # create_target_heatmap(csv, geo)
-    spider = create_spider_map(csv, np.array([324, 261, 38]), geo, img_spacing, crani_pos=np.array([417, 242, 83]))
-    myhdr = create_seg_hdr(hdr, seg_hdr, spider, [200, 1500])
+    spider = create_spider_map(csv, np.array([284, 288, 44]), geo, img_spacing, crani_pos=np.array([377, 284, 34]))
+    myhdr = create_seg_hdr(hdr, seg_hdr, spider, [200, 2000])
     spider[np.where(spider != 0)] = 1
-    nrrd.write('C:\\Users\\anand\\OneDrive - UW\\LSB_cohort\\pt_{0}\\spider_{1}.nrrd'.format(pt, app), spider, myhdr)
+    nrrd.write('C:\\Users\\anand\\OneDrive - UW\\LSB_cohort\\pt_{0}\\spider_377_284_34_{1}.nrrd'.format(pt, app), spider, myhdr)
 
     # create_target_heatmap(csv, geo)
-#    thm = create_target_heatmap(csv, geo)
-#    thm_hdr = create_seg_hdr(hdr, seg_hdr, thm, [0, 1.0])
-#    thm[np.where(thm != 0)] = 1
-#    nrrd.write(thm_out, thm, thm_hdr)
-
-#    chm = create_crani_heatmap(csv, geo)
-#    chm_hdr = create_seg_hdr(hdr, seg_hdr, chm, [0, 1.0])
-#    chm[np.where(chm != 0)] = 1
-#    nrrd.write(chm_out, chm, chm_hdr)
+    thm = create_target_heatmap(csv, geo)
+    thm_hdr = create_seg_hdr(hdr, seg_hdr, thm, [0, 1.0])
+    thm[np.where(thm != 0)] = 1
+    nrrd.write(thm_out, thm, thm_hdr)
+#
+    chm = create_crani_heatmap(csv, geo)
+    chm_hdr = create_seg_hdr(hdr, seg_hdr, chm, [0, 1.0])
+    chm[np.where(chm != 0)] = 1
+    nrrd.write(chm_out, chm, chm_hdr)
 
 
 

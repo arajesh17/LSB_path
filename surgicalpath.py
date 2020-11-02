@@ -24,10 +24,13 @@ class Cylinder(object):
         :return:
         """
 
-        target_coords_trans1 = self.targ - self.ep
-        rot1 = create_rotation_matrix(self.targ - self.ep,
+        # create the unit vector of the target and the entry points
+        vhat = self.targ - self.ep
+
+        rot1 = create_rotation_matrix(vhat,
                                       [1, 0, 0])
 
+        target_coords_trans1 = self.targ - self.ep
         tumor_coords_rot_to_x_axis = rot1.apply(target_coords_trans1)
         tumor_center_rot_to_x_axis = rot1.apply(self.targ - self.ep)
 
@@ -35,7 +38,8 @@ class Cylinder(object):
 
         x_offset = x_max - tumor_center_rot_to_x_axis[0]
 
-        # generate points for the disc in the x plane #todo make the radius a passable parameter
+        # generate points for the disc in the x plane
+        # TODO make the radius a function of theta b/c theta of 45 makes radius =  non circle
         y_circle, z_circle = create_circle(self.radii[0] / self.spacing[1], self.radii[0] / self.spacing[2],
                                            n=num)  # calibrate radius based off of spacing
         y_circle2, z_circle2 = create_circle(self.radii[1] / self.spacing[1], self.radii[1] / self.spacing[2],
@@ -54,10 +58,14 @@ class Cylinder(object):
 
         # create the rotation between x axis and path vector
         rot2 = create_rotation_matrix([1, 0, 0],
-                                      self.targ - self.ep)
+                                      vhat)
+        # plot the image on this axis
+        #TODO PLOTTING
 
         # apply the rotation
         cyl_coords_rot = rot2.apply(cyl_coords_x_axis)
+
+        #TODO
 
         # translate disc coordinates after rotation they are no longer centered around origin
         cyl_coords_rot_trans = cyl_coords_rot + self.ep
@@ -324,7 +332,8 @@ def create_voxelized_path(pts, non_voxelized_pts, geometry, t=''):
     within = tp[idx].T
     voxelized_path[within[0], within[1], within[2]] = True
 
-    #plot_convhull(convhull, np.where(voxelized_path==True), plt_title=t)
+    ax = geometry
+    #plot_convhull(convhull, np.where(voxelized_path==True), axes=ax, plt_title=t)
     # plot_point_cloud(np.where(voxelized_path == True))
     #plot_convhull(delan)
 
@@ -332,3 +341,8 @@ def create_voxelized_path(pts, non_voxelized_pts, geometry, t=''):
                                            structure=np.ones((5, 5, 5))
                                            ).astype(int)
     return voxelized_path_closed
+
+#img_spacing = np.array([0.47816666, 0.47816666, 1.0])
+#geo = np.array([480, 480, 165])
+#c = Cylinder(np.array([376, 209, 73]), np.array([260, 282, 33]), 1.0, 5.0, 10.0, geo, img_spacing)
+#c.create_shape()

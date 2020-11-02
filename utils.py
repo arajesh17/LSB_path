@@ -104,7 +104,7 @@ def create_rotation_matrix(vector1, vector2):
     return rotation
 
 
-def plot_convhull(hull, pts = [], plt_title=''):
+def plot_convhull(hull, pts = [], axes=[], plt_title=''):
     """ visualizes convex hull with faces all drawn"""
 
 
@@ -117,9 +117,14 @@ def plot_convhull(hull, pts = [], plt_title=''):
 
     fig = plt.figure()
     ax = Axes3D(fig)
-    ax.set_xlim3d(np.min(_pts[:, 0]), np.max(_pts[:, 0]))
-    ax.set_ylim3d(np.min(_pts[:, 1]), np.max(_pts[:, 1]))
-    ax.set_zlim3d(np.min(_pts[:, 2]), np.max(_pts[:, 2]))
+    if len(axes) > 0:
+        ax.set_xlim3d(axes[0])
+        ax.set_ylim3d(axes[1])
+        ax.set_zlim3d(axes[2])
+    else:
+        ax.set_xlim3d(np.min(_pts[:, 0]), np.max(_pts[:, 0]))
+        ax.set_ylim3d(np.min(_pts[:, 1]), np.max(_pts[:, 1]))
+        ax.set_zlim3d(np.min(_pts[:, 2]), np.max(_pts[:, 2]))
     ax.set_xlabel('X')
     ax.set_ylabel('Y')
     ax.set_zlabel('Z')
@@ -222,7 +227,7 @@ import pandas as pd
 #
 #plot_heat_map(T, C, scores, 'heatmap', bounds=bnds)
 
-def plot_point_cloud(pts, pts2=[]):
+def plot_point_cloud(pts, pts2=[], axes=[]):
     """ plt 3d collection of points"""
 
     ax = Axes3D(plt.figure())
@@ -230,6 +235,11 @@ def plot_point_cloud(pts, pts2=[]):
     ax.set_xlabel('X')
     ax.set_ylabel('Y')
     ax.set_zlabel('Z')
+
+    if len(axes) > 0:
+        ax.set_xlim3d(axes[0])
+        ax.set_ylim3d(axes[1])
+        ax.set_zlim3d(axes[2])
 
     if len(pts2):
         ax2 = Axes3D(plt.figure())
