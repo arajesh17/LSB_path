@@ -71,6 +71,20 @@ def create_circle(r1, r2, n=20):
     return cos, sin
 
 
+def get_angle(v1, v2):
+    """
+    finds the angle between two vectors in radians
+    :param v1: vector 1
+    :param v2: vector 2
+    :return:
+    """
+
+    v1 = v1 / np.linalg.norm(v1)
+    v2 = v2 / np.linalg.norm(v2)
+    angle_of_rot = np.arccos(np.dot(v1, v2))
+
+    return angle_of_rot
+
 def create_rotation_matrix(vector1, vector2):
     """
     to generate the rotation matrix between two vectors we calculate
@@ -218,14 +232,6 @@ def plot_heat_map(targ, crani, min_dist, title, bounds=[0,30]):
 
     plt.show()
 
-import pandas as pd
-
-#T = df.loc[0,'targ']
-#C = df.loc[0, 'crani']
-#scores = df.loc[0, 'score']
-#bnds = [np.min(scores) - 1000, np.max(scores) + 1000]
-#
-#plot_heat_map(T, C, scores, 'heatmap', bounds=bnds)
 
 def plot_point_cloud(pts, pts2=[], axes=[]):
     """ plt 3d collection of points"""

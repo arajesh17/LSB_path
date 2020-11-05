@@ -87,7 +87,12 @@ def create_seg_hdr(im_hdr, seg_hdr, seg_data, bnds):
 
         #get color for score
         shape = seg_data[idx, :, :, :]
-        score = np.unique(shape)[np.unique(shape) != 0][0] - 0.01 #TODO jank hardcoded b/c of the offset in the create heatmap method
+
+        try:
+            score = np.unique(shape)[np.unique(shape) != 0][0] - 0.01 #TODO jank hardcoded b/c of the offset in the create heatmap method
+        except:
+            score = 1
+
         color = cmap.to_rgba(score)
         #hdr['{}_Color'.format(root)] = 'R={0:.3f} G={1:.3f} B={2:.3f} A=1.000'.format(color[0], color[1], color[2])
         hdr['{}_Color'.format(root)] = '{0} {1} {2}'.format(color[0], color[1], color[2])
@@ -230,7 +235,7 @@ def create_spider_map(fname, target, geometry, spacing, crani_pos = []):
 
 # set tunable variables
 wd = 'C:\\Users\\anand\\OneDrive - UW\\LSB_cohort\\'
-pt = '25'
+pt = '9'
 
 for app in ['MCF']:
     # set the variables for funsie
@@ -248,10 +253,10 @@ for app in ['MCF']:
                                  axis=1)  # slice spacing is defined as the normalized vector of the space transformation matrix
     geo = im.shape
 
-    spider = create_spider_map(csv, np.array([284, 288, 44]), geo, img_spacing, crani_pos=np.array([377, 284, 34]))
+    spider = create_spider_map(csv, np.array([306, 257, 42]), geo, img_spacing)
     myhdr = create_seg_hdr(hdr, seg_hdr, spider, [200, 2000])
     spider[np.where(spider != 0)] = 1
-    nrrd.write('C:\\Users\\anand\\OneDrive - UW\\LSB_cohort\\pt_{0}\\spider_377_284_34_{1}.nrrd'.format(pt, app), spider, myhdr)
+    nrrd.write('C:\\Users\\anand\\OneDrive - UW\\LSB_cohort\\pt_{0}\\spider_{1}.nrrd'.format(pt, app), spider, myhdr)
 
     # create_target_heatmap(csv, geo)
     thm = create_target_heatmap(csv, geo)

@@ -1,10 +1,11 @@
 import numpy as np
-from utils import find_center, find_extrema, create_circle, create_rotation_matrix, plot_convhull, plot_point_cloud
+from utils import find_center, find_extrema, create_circle, create_rotation_matrix, plot_convhull, plot_point_cloud, get_angle
 from scipy.spatial import ConvexHull, Delaunay
 from scipy.ndimage.morphology import binary_closing
 from weights import microscope_dict
 from inhull import vectorized_in_hull
 import nrrd
+
 
 class Cylinder(object):
     """ Cylinder"""
@@ -39,7 +40,7 @@ class Cylinder(object):
         x_offset = x_max - tumor_center_rot_to_x_axis[0]
 
         # generate points for the disc in the x plane
-        # TODO make the radius a function of theta b/c theta of 45 makes radius =  non circle
+
         y_circle, z_circle = create_circle(self.radii[0] / self.spacing[1], self.radii[0] / self.spacing[2],
                                            n=num)  # calibrate radius based off of spacing
         y_circle2, z_circle2 = create_circle(self.radii[1] / self.spacing[1], self.radii[1] / self.spacing[2],
@@ -59,21 +60,71 @@ class Cylinder(object):
         # create the rotation between x axis and path vector
         rot2 = create_rotation_matrix([1, 0, 0],
                                       vhat)
-        # plot the image on this axis
-        #TODO PLOTTING
-
         # apply the rotation
         cyl_coords_rot = rot2.apply(cyl_coords_x_axis)
-
-        #TODO
 
         # translate disc coordinates after rotation they are no longer centered around origin
         cyl_coords_rot_trans = cyl_coords_rot + self.ep
 
         # append all the vertexes into a surgical vertex list
-        surgical_vertex = np.around(np.array(cyl_coords_rot_trans)).astype(int)
+        surgical_vertex = np.around(cyl_coords_rot_trans).astype(int)
 
         voxelized_cylinder = create_voxelized_path(surgical_vertex, cyl_coords_rot_trans, self.geometry, t='bi-cone')
+
+        self.vtx = surgical_vertex
+        self.voxel = voxelized_cylinder
+
+    def create_shape2(self, num=20):
+        """
+        Create a cone in the X plane first, then rotate it to the correct space
+        :param num:
+        :return:
+        """
+
+        vhat = self.targ - self.ep
+
+        # rotation matrix between the vector of target-entry point and the x-axis
+        rot1 = create_rotation_matrix(vhat,
+                                      [1, 0, 0])
+
+        target_coords_trans1 = self.targ - self.ep
+        tumor_coords_rot_to_x_axis = rot1.apply(target_coords_trans1)
+        tumor_center_rot_to_x_axis = rot1.apply(self.targ - self.ep)
+
+        x_max, y_max, z_max = find_extrema(tumor_coords_rot_to_x_axis, 'max')
+
+        x_offset = x_max - tumor_center_rot_to_x_axis[0]
+
+        cyl_coords_rot_scaled = []
+
+        for idx, radius in enumerate(self.radii):
+
+            y_circle, z_circle = create_circle(radius, radius, n=num)
+            path_length = np.linalg.norm(vhat) + x_offset
+            x_point = path_length * ((idx) / (len(self.radii) - 1)) # xpoint is a function of number of points of radii
+            x_circle = np.tile(x_point, len(y_circle))
+            circle = list(zip(x_circle, y_circle, z_circle))
+            center = np.array([x_point, 0, 0])
+            cyl_coords_x_axis = circle
+
+            # create the rotation between x axis and path vector
+            rot2 = create_rotation_matrix([1, 0, 0],
+                                      vhat)
+
+            cyl_coords_rot = rot2.apply(cyl_coords_x_axis) + self.ep
+            center_rot = rot2.apply(center) + self.ep
+
+            # for each point in cyl_coords_rot scale the radius based on the image spacing
+            for p in cyl_coords_rot:
+                A = p - center_rot
+                p_new = center_rot + A / self.spacing
+                cyl_coords_rot_scaled.append(p_new)
+
+        #
+        cyl_coords_rot_scaled = np.asarray(cyl_coords_rot_scaled)
+
+        surgical_vertex = np.around(cyl_coords_rot_scaled).astype(int)
+        voxelized_cylinder = create_voxelized_path(surgical_vertex, cyl_coords_rot_scaled, self.geometry, t='bi-cone')
 
         self.vtx = surgical_vertex
         self.voxel = voxelized_cylinder
@@ -315,6 +366,7 @@ def create_voxelized_path(pts, non_voxelized_pts, geometry, t=''):
     """
     Creates a voxelized form with the inputted vertices
     """
+
     convhull = ConvexHull(non_voxelized_pts)
     delan = Delaunay(non_voxelized_pts)
     print('number of vertices for the delaunay shape {}'.format(delan.vertices.shape))
@@ -333,16 +385,22 @@ def create_voxelized_path(pts, non_voxelized_pts, geometry, t=''):
     voxelized_path[within[0], within[1], within[2]] = True
 
     ax = geometry
-    #plot_convhull(convhull, np.where(voxelized_path==True), axes=ax, plt_title=t)
-    # plot_point_cloud(np.where(voxelized_path == True))
-    #plot_convhull(delan)
 
     voxelized_path_closed = binary_closing(voxelized_path,
                                            structure=np.ones((5, 5, 5))
                                            ).astype(int)
     return voxelized_path_closed
 
-#img_spacing = np.array([0.47816666, 0.47816666, 1.0])
-#geo = np.array([480, 480, 165])
-#c = Cylinder(np.array([376, 209, 73]), np.array([260, 282, 33]), 1.0, 5.0, 10.0, geo, img_spacing)
-#c.create_shape()
+#im_pth =
+#out_pth =
+
+
+#EP = np.array([376, 209, 73])
+EP = np.array([376, 300, 50])
+TARG = np.array([300, 215, 73])
+
+RADI = np.array([5, 2.5, 0.25])
+GEO = np.array([512, 512, 124])
+SPACING = np.array([0.3515625, 0.3515625, 0.49999723])
+cyl = Cylinder(EP, TARG, RADI[0], RADI[1], RADI[2], GEO, SPACING)
+cyl.create_shape2()
