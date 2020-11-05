@@ -81,36 +81,30 @@ class Cylinder(object):
         :return:
         """
 
-        vhat = self.targ - self.ep
-
-        # rotation matrix between the vector of target-entry point and the x-axis
-        rot1 = create_rotation_matrix(vhat,
-                                      [1, 0, 0])
-
-        target_coords_trans1 = self.targ - self.ep
-        tumor_coords_rot_to_x_axis = rot1.apply(target_coords_trans1)
-        tumor_center_rot_to_x_axis = rot1.apply(self.targ - self.ep)
-
-        x_max, y_max, z_max = find_extrema(tumor_coords_rot_to_x_axis, 'max')
-
-        x_offset = x_max - tumor_center_rot_to_x_axis[0]
-
+        # instantiate output array for data points
         cyl_coords_rot_scaled = []
+
+        vhat = self.targ - self.ep
 
         for idx, radius in enumerate(self.radii):
 
-            y_circle, z_circle = create_circle(radius, radius, n=num)
-            path_length = np.linalg.norm(vhat) + x_offset
+            path_length = np.linalg.norm(vhat)
             x_point = path_length * ((idx) / (len(self.radii) - 1)) # xpoint is a function of number of points of radii
+
+            # create the y and z points of the circle
+            y_circle, z_circle = create_circle(radius, radius, n=num)
+
+            # create points for the x array
             x_circle = np.tile(x_point, len(y_circle))
-            circle = list(zip(x_circle, y_circle, z_circle))
+
+            # combine all X,Y,Z points to make the circle
+            cyl_coords_x_axis = list(zip(x_circle, y_circle, z_circle))
             center = np.array([x_point, 0, 0])
-            cyl_coords_x_axis = circle
 
             # create the rotation between x axis and path vector
-            rot2 = create_rotation_matrix([1, 0, 0],
-                                      vhat)
+            rot2 = create_rotation_matrix([1, 0, 0], vhat)
 
+            # rotate the points of the cylinder and center of cylinder by rot2
             cyl_coords_rot = rot2.apply(cyl_coords_x_axis) + self.ep
             center_rot = rot2.apply(center) + self.ep
 
@@ -120,7 +114,7 @@ class Cylinder(object):
                 p_new = center_rot + A / self.spacing
                 cyl_coords_rot_scaled.append(p_new)
 
-        #
+        # store as numpy array
         cyl_coords_rot_scaled = np.asarray(cyl_coords_rot_scaled)
 
         surgical_vertex = np.around(cyl_coords_rot_scaled).astype(int)
@@ -138,197 +132,6 @@ class Cylinder(object):
         """
         nrrd.write(fname, self.voxel, fname, hdr)
         print('saved file at {}'.format(fname))
-
-
-class SurgicalPath():
-    """
-    create the vertexes of a shape with craniotomy and the
-    disc with radius of the tumor target
-    """
-
-
-    @staticmethod
-    def create_microscope(crani_center, target_coords, geometry, img_spacing, micro_dict=microscope_dict):
-        """
-        Creates a computed microscope path2
-
-        :param crani_center:
-        :param target_coords:
-        :param geometry:
-        :param img_spacing:
-        :return:
-        """
-
-        if len(crani_center.shape) > 1:
-            crani_center = find_center(crani_center)
-        target_center = find_center(target_coords)
-
-        target_coords_trans1 = target_coords - crani_center
-        rot1 = create_rotation_matrix(target_center - crani_center,
-                                      [1, 0, 0])
-
-        target_coords_rot_to_x_axis = rot1.apply(target_coords_trans1)
-        target_center_rot_to_x_axis = rot1.apply(target_center - crani_center)
-
-        x_min, y_min, z_min = find_extrema(target_coords_rot_to_x_axis, 'min')
-        x_max, y_max, z_max = find_extrema(target_coords_rot_to_x_axis, 'max')
-
-        # find the widest point of the target coordinates rotated on the x axis
-        y_radius = (y_max - y_min) / 2
-        z_radius = (z_max - z_min) / 2
-
-        if y_radius * img_spacing[1] < micro_dict["Min Distal Radius"]:
-            y_radius = micro_dict["Min Distal Radius"] / img_spacing[1]
-        if z_radius * img_spacing[2] < micro_dict["Min Distal Radius"]:
-            z_radius = micro_dict["Min Distal Radius"] / img_spacing[2]
-
-        # generate points for the disc in the x plane
-        y_circle, z_circle = create_circle(y_radius, z_radius, n=20)
-        path_length = np.linalg.norm(target_center - crani_center)
-        x_offset = x_max - target_center_rot_to_x_axis[0]
-        x_circle = np.tile(path_length, len(y_circle)) + x_offset
-
-        ratio = micro_dict["Radius"]/micro_dict["Focal Length"]
-        y_micro, z_micro = create_circle(path_length * ratio / img_spacing[1],
-                                         path_length * ratio / img_spacing[2],
-                                         n=20)
-        x_micro = np.tile(0, len(y_micro))
-        tumor_x_axis = np.array(list(zip(x_circle, y_circle, z_circle)))
-        micro_x_axis = np.array(list(zip(x_micro, y_micro, z_micro)))
-        disc_coords_x_axis = np.vstack((tumor_x_axis, micro_x_axis))
-
-        # create the rotation between x axis and path vector
-        rot2 = create_rotation_matrix([1, 0, 0],
-                                      target_center - crani_center)  # TODO make a vector
-
-        # apply the rotation
-        disc_coords_rot = rot2.apply(disc_coords_x_axis)
-
-        # translate disc coordinates after rotation they are no longer centered around origin
-        surgical_vertex = disc_coords_rot + crani_center
-
-        # round values
-        surgical_vertex_round = np.around(np.array(surgical_vertex)).astype(int)
-
-        voxelized_disc_w_crani = create_voxelized_path(surgical_vertex_round, surgical_vertex, geometry, t='crani_disc')
-
-        return surgical_vertex, voxelized_disc_w_crani
-
-    @staticmethod
-    def create_disc_with_crani( crani_coords, target_coords, geometry, img_spacing):
-
-        target_center = find_center(target_coords)
-        crani_center = find_center(crani_coords)
-
-        target_coords_trans1 = target_coords - crani_center
-        rot1 = create_rotation_matrix(target_center - crani_center,
-                                                   [1, 0, 0])
-
-        target_coords_rot_to_x_axis = rot1.apply(target_coords_trans1)
-        target_center_rot_to_x_axis = rot1.apply(target_center - crani_center)
-
-        x_min, y_min, z_min = find_extrema(target_coords_rot_to_x_axis, 'min')
-        x_max, y_max, z_max = find_extrema(target_coords_rot_to_x_axis, 'max')
-
-
-        # find the widest point of the target coordinates rotated on the x axis
-        y_radius = (y_max - y_min)/2
-        z_radius = (z_max - z_min)/2
-
-        # generate points for the disc in the x plane
-        y_circle, z_circle = create_circle(y_radius, z_radius, n=20)
-        path_length = np.linalg.norm(target_center - crani_center)
-        x_offset = x_max-target_center_rot_to_x_axis[0]
-        x_circle = np.tile(path_length, len(y_circle)) + x_offset
-        disc_coords_x_axis = np.array(list(zip(x_circle, y_circle, z_circle)))
-
-        # create the rotation between x axis and path vector
-        rot2 = create_rotation_matrix([1, 0, 0],
-                                      target_center - crani_center) #TODO make a vector
-
-        # apply the rotation
-        disc_coords_rot = rot2.apply(disc_coords_x_axis)
-
-        # translate disc coordinates after rotation they are no longer centered around origin
-        disc_coords_rot_trans = disc_coords_rot + crani_center
-
-        # append all the vertexes into a surgical vertex list
-        surgical_vertex = []
-        for i in disc_coords_rot_trans:
-            surgical_vertex.append(i)
-        for i in crani_coords:
-            surgical_vertex.append(i)
-        surgical_vertex_round = np.around(np.array(surgical_vertex)).astype(int)
-
-        voxelized_disc_w_crani = create_voxelized_path(surgical_vertex_round, surgical_vertex, geometry, t='crani_disc')
-
-        return surgical_vertex, voxelized_disc_w_crani
-
-    @staticmethod
-    def create_bicone_cylinder(crani_coords, target_coords, r1, r2, r3, geometry, spacing, n=20):
-        """
-        create a biconical cylinder similar to the anterior skull base. create it in the x plane then rotate it to the
-        the correct plane of the crani_coords, target_coords vector
-
-
-        :param proximal_center:
-        :param distal_center:
-        :param geometry: geometry of the image
-        :param r1: radius  of the proximal circle of bicone
-        :param r2: radius of the midpoitn circle of the bicone
-        :param r3: radius of the distal circle of the bicone
-        :param spacing: image spacing of the slices of each axis in mm i.e. 1mm x 2mm x 3mm [1.0, 2.0, 3.0]
-        :param n: number of vertices per circle
-        :returns vertex
-        :returns path
-
-        """
-
-        proximal_center = find_center(crani_coords)
-        target_center = find_center(target_coords)
-
-        target_coords_trans1 = target_coords - proximal_center
-        rot1 = create_rotation_matrix(target_center - proximal_center,
-                                                   [1, 0, 0])
-
-        tumor_coords_rot_to_x_axis = rot1.apply(target_coords_trans1)
-        tumor_center_rot_to_x_axis = rot1.apply(target_center - proximal_center)
-
-        x_max, y_max, z_max = find_extrema(tumor_coords_rot_to_x_axis, 'max')
-
-        x_offset = x_max - tumor_center_rot_to_x_axis[0]
-
-        # generate points for the disc in the x plane #todo check logic here
-        y_circle, z_circle = create_circle(r1/spacing[1], r1/spacing[2], n=20) #calibrate radius based off of spacing
-        y_circle2, z_circle2 = create_circle(r2/spacing[1], r2/spacing[2], n=20) #calibrate radius based off of spacing
-        y_circle3, z_circle3 = create_circle(r3/spacing[1], r3/spacing[2], n=20) #calibrate radius based off of  spacing
-        path_length = np.linalg.norm(target_center - proximal_center) + x_offset
-        midpoint = path_length / 2
-        x_circle = np.tile(0, len(y_circle))
-        x_circle2 = np.tile(midpoint, len(y_circle2))
-        x_circle3 = np.tile(path_length, len(y_circle3))
-        circle1 = list(zip(x_circle, y_circle, z_circle))
-        circle2 = list(zip(x_circle2, y_circle2, z_circle2))
-        circle3 = list(zip(x_circle3, y_circle3, z_circle3))
-        cyl_coords_x_axis = np.vstack((circle1, circle2, circle3))
-
-        # create the rotation between x axis and path vector
-        rot2 = create_rotation_matrix([1, 0, 0],
-                                      target_center - proximal_center) #todo make a vector
-
-        # apply the rotation
-        cyl_coords_rot = rot2.apply(cyl_coords_x_axis)
-
-        # translate disc coordinates after rotation they are no longer centered around origin
-        cyl_coords_rot_trans = cyl_coords_rot + proximal_center
-
-        # append all the vertexes into a surgical vertex list
-        surgical_vertex = np.around(np.array(cyl_coords_rot_trans)).astype(int)
-
-        voxelized_cylinder = create_voxelized_path(surgical_vertex, cyl_coords_rot_trans, geometry, t='bi-cone')
-
-        return surgical_vertex, voxelized_cylinder
-
 
 def create_coordinate_window(pts, shape):
     """

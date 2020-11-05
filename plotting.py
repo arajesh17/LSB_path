@@ -224,7 +224,7 @@ def create_spider_map(fname, target, geometry, spacing, crani_pos = []):
         cone_im = np.zeros(geometry)
         cone = Cylinder(crani, target, limit_dict['crani_radius'], limit_dict['crani_radius']/2,
                         limit_dict['cyl_radius'], geometry, spacing)
-        cone.create_shape()
+        cone.create_shape2()
         cone_im[np.where(cone.voxel == 1)] = row['cost'][idx]
         seg.append(cone_im)
 
