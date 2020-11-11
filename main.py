@@ -22,11 +22,11 @@ for pt in pt_list:
     fcsv = join(wd, 'pt_{}\\Craniotomy_Markers.fcsv'.format(pt))
 
     # outputted files
-
     MCF_pth = 'C:\\Users\\anand\\OneDrive - UW\\LSB_cohort\\pt_{0}\\pt_{0}_MCF_ero3.csv'.format(pt)
     RS_pth = 'C:\\Users\\anand\\OneDrive - UW\\LSB_cohort\\pt_{0}\\pt_{0}_RS_ero3.csv'.format(pt)
 
 
+    # load the data space it correctly
     seg_data, lut = LoadData.load_segmentation(seg_pth, lup_tbl)
     im, hdr = LoadData.load_image(img_pth)
     img_spacing = np.linalg.norm(hdr['space directions'],

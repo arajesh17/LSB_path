@@ -32,6 +32,21 @@ class DistanceMap(object):
 
     def cdist(self, method):
         """
+
+        find distance between points using the cdist method
+
+        Parameters
+        ----------
+        method: string ["euclidian", "wminkowski"]
+            the method for calculating distance
+        Returns
+        -------
+        distance_map: ndarray [n_voxel_X, n_voxel_Y, n_voxel_Z]
+            the distance between points in the voxel space
+
+        """
+        """
+        
         find distance using cdist approach
         :param method (str) 'euclidian' or 'wminkowski'
         :return:
@@ -77,12 +92,3 @@ class DistanceMap(object):
         im[self.segcoords.T[0], self.segcoords.T[1], self.segcoords.T[2]] = 0
 
         return im
-
-    def tree(self):
-        """
-        find distance using cdktree
-        https://stackoverflow.com/questions/24020409/producing-a-nearest-neighbour-distance-map-for-a-set-of-points
-
-        :return:
-        """
-

@@ -26,8 +26,18 @@ def load_json(file):
 
 def find_center(coordinates):
     """
-    :param coordinates: array of coordinates as size (n,3) in for [[x1, y1, z1], [x2, y2, z2],....]]
-    :return: com: center of mass of the coordinates
+    finds the center of mass of coordinates in 3 dimensions
+
+    Parameters
+    ----------
+    coordinates: ndarray (n,3)
+        array of coordinates to find the center of
+
+    Returns
+    -------
+    com: ndarray (1,3)
+        the center of mass of the coordinates
+
     """
 
     if len(coordinates.shape) == 3:

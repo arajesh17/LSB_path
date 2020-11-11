@@ -5,12 +5,16 @@ from coordinates import convert_RAS_to_ijk
 
 class EntryPoint:
 
-    def __init__(self, fcsv, hdr, skull_seg=None, tissue_seg=None):
+    def __init__(self, fcsv, hdr):
+        """
+        the class to wrap different methods to find the entry points of the input crani
+
+        :param fcsv: the filename of the .fcsv file with the fiducial information
+        :param hdr: the nrrd header file of the image
+        """
 
         self.fcsv = fcsv
         self.hdr = hdr
-        self.skull = skull_seg
-        self.tissue = tissue_seg
 
     def skull_strip(self):
         """ Method to detect where the skull superficial border is:
@@ -49,7 +53,7 @@ class EntryPoint:
         MCF_ijk - MCF fiducial coordinates in ijk coordinate system
         """
 
-        # load the dataframe
+        # load the data from the the fiducials
         f = pd.read_csv(self.fcsv, header=2)
 
         # MCF
@@ -61,15 +65,7 @@ class EntryPoint:
         RS_ijk = np.array([convert_RAS_to_ijk(self.hdr, x) for x in RS_RAS])
 
         #debugging to set an negative values to zero in case fiducials are placed outside of range
-        # TODO build the capabilty to pad image in the zero plane so that the images can extend if fidicuals are placed below
         MCF_ijk[np.where(MCF_ijk < 0)] = 0
         RS_ijk[np.where(RS_ijk < 0)] = 0
 
         return MCF_ijk, RS_ijk
-
-import nrrd
-
-#im, hdr = nrrd.read('C:\\Users\\anand\\OneDrive - UW\\LSB_cohort\\pt_21\\601 AX 3D BFFE THIN.nrrd')
-#f = 'C:\\Users\\anand\\OneDrive - UW\\LSB_cohort\\pt_21\\Craniotomy_Markers.fcsv'
-#ep = EntryPoint(f, hdr)
-#ep.from_fiducials()

@@ -198,12 +198,12 @@ def create_voxelized_path(pts, non_voxelized_pts, geometry, t=''):
 #out_pth =
 
 
-#EP = np.array([376, 209, 73])
-EP = np.array([376, 300, 50])
-TARG = np.array([300, 215, 73])
-
-RADI = np.array([5, 2.5, 0.25])
-GEO = np.array([512, 512, 124])
-SPACING = np.array([0.3515625, 0.3515625, 0.49999723])
-cyl = Cylinder(EP, TARG, RADI[0], RADI[1], RADI[2], GEO, SPACING)
-cyl.create_shape2()
+#EP = np.array([376, 300, 50])
+#TARG = np.array([300, 215, 73])
+#
+#RADI = np.array([5, 2.5, 0.25])
+#GEO = np.array([512, 512, 124])
+#SPACING = np.array([0.3515625, 0.3515625, 0.49999723])
+#cyl = Cylinder(EP, TARG, RADI[0], RADI[1], RADI[2], GEO, SPACING)
+#cyl.create_shape2()
+#

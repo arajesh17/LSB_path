@@ -9,7 +9,28 @@ import numpy as np
 
 
 def create_gradient_map(lut, data, img_spacing, group_table= LSB_class_group):
-    """ Create gradient map"""
+    """
+    Create the gradient map of the specified structures by using  binary erosion
+
+
+    Parameters
+    ----------
+    lut: dictionary
+        look up table encoded by the color table which pairs integers with semantic segmentation strings
+    data: ndarray (n_voxel_X, n_voxel_Y, n_voxel_Z)
+        segmentation data
+    img_spacing: ndarray (1,3)
+        voxel spacing of data
+    group_table: dictionary
+        the table of the group properties
+
+    Returns
+    -------
+
+    gradient maps: dictionary {"group": group_gradient}
+        dictionary with the respective eroded gradient map as the value to the group key
+
+    """
 
     gradient_maps = {}
     def_group = [k for k, v in group_table.items() if v["Class"] == "Deformable"]

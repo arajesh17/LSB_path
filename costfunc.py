@@ -5,7 +5,7 @@ import pandas as pd
 from utils import array_to_coords, binarize_segmentation, NumpyEncoder
 from coordinates import find_edge_points, create_crani_grid
 from weights import LSB_class_weights, LSB_class_group, microscope_dict, dist_map_dict, limit_dict
-from surgicalpath import SurgicalPath, Cylinder
+from surgicalpath import Cylinder
 from scipy.ndimage import generate_binary_structure
 from collections import OrderedDict
 

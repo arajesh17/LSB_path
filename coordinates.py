@@ -3,21 +3,28 @@ from utils import unique2d, find_extrema, plot_point_cloud, find_center
 from scipy.ndimage import generate_binary_structure, binary_erosion
 from itertools import combinations
 
-
 def create_crani_grid(parameters, offst, stepnum=5):
     """
-    crani defined by four points (a,b,c, d) create a grid connecting the points by
-    :param parameters:
-    :param offst the number of voxels from the border you want to start the grid coordinates (important because if the
-                    point travels to the edge of the craniotomy -- techincally, it will be outside of the bounds b/c of
-                    the radius of the cylinder
-    :type  offst int
-    :param stepnum: number of steps to take from corner points when creating the grid
-    :return:
+
+    creates a grid connecting the vertices of the craniotomy grid
+
+    Parameters
+    ----------
+    parameters: ndarray (4, 3)
+        the coordinates for the vertices of the craniotomy
+    offst: int
+        the number of voxels from the border of grind you want to starte the grid coordinates. Important because if the
+        point travels to the edge of the craniotomy techinically it will be outside of the bounds b/c of the radius of the cylinder
+    stepnum: int
+        the number of steps to take from corner points when creating the grid
+
+    Returns
+    -------
+
+    output: ndarray (16, 3)
+        array of grid coordinates of the craniotomy
+
     """
-
-    #find b and c which are defined as the two points nearest to a
-
 
     origin = find_center(parameters)
 
@@ -162,6 +169,23 @@ def find_edge_points(target, struct, iter=1):
     return key_points[::1]
 
 def convert_ijk_to_RAS(hdr, pt):
+    """
+    converts points from RAS to ijk
+
+    Parameters
+    ----------
+    hdr: nrrd header
+        the header of image
+    pt: ndarray (3,) or (n,3)
+        array with points in RAS space to transform to ijk
+
+    Returns
+    -------
+
+    output: ndarray
+        points transformed into the ijk space
+
+    """
 
     # turn into the [x,y,z, 1] format
     if pt.shape == (3,):
@@ -179,6 +203,23 @@ def convert_ijk_to_RAS(hdr, pt):
 
 
 def convert_RAS_to_ijk(hdr, pt):
+    """
+    converts points from RAS to ijk
+
+    Parameters
+    ----------
+    hdr: nrrd header
+        the header of image
+    pt: ndarray (3,) or (n,3)
+        array with points in RAS space to transform to ijk
+
+    Returns
+    -------
+
+    output: ndarray
+        points transformed into the ijk space
+
+    """
 
     # turn into the [x,y,z, 1] format
     if pt.shape == (3,):
@@ -193,15 +234,19 @@ def convert_RAS_to_ijk(hdr, pt):
     ijk_to_ras = np.matmul(lps_to_ras, ijk_to_lps)
     ras_to_ijk = np.linalg.inv(ijk_to_ras)
     x_pt = np.round(np.matmul(ras_to_ijk, pt))
+
     return x_pt.flatten()[:-1]
 
 def pad_seg_data(seg_data, crani_coords, ax=2):
     """
     Pads the segmentation data in the specific axis dimension
 
-    :param seg_data: segmentation data
-    :param  crani_coords: the coordinates of the craniotomy
+    :param seg_data: ndarray (n_voxel_X, n_voxel_Y, n_voxel_Z)
+                The voxelized data of the segmentation
+    :param  crani_coords: ndarray (n, 3)
+                the coordinates of the craniotomy points from the fcsv file
     :return:
+
     """
 
     # check if the crani coords are within the geometry of the seg_data
@@ -220,8 +265,3 @@ def pad_seg_data(seg_data, crani_coords, ax=2):
     pad_im = np.repeat(seg_data, [1]*(seg_data.shape[ax]-1) + [upper_pad], axis=ax)
 
     return pad_im
-
-#import nrrd
-#im, hdr = nrrd.read('C:\\Users\\anand\\OneDrive - UW\\LSB_cohort\\pt_6\\601 AX 3D B FFE IACs_1.nrrd')
-#padded = pad_seg_data(im, np.array([[512, 512, 100]]))
-#nrrd.write('C:\\Users\\anand\\OneDrive - UW\\LSB_cohort\\pt_6\\padded.nrrd', padded, hdr)
