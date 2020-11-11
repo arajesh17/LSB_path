@@ -19,6 +19,32 @@ class CostFunc:
     def __init__(self, entry_point, seg_data, lut, dist_maps, def_dict, img_spacing,
                  weight_table=LSB_class_weights, group_table=LSB_class_group, dist_dict=dist_map_dict,
                  lim_dict=limit_dict):
+        """
+        Constructor for cost function takes in all parameters
+
+        Parameters
+        ----------
+        entry_point: ndarray (n, 3)
+            grid of entry points for the craniotomies
+        seg_data: ndarray (n_voxel_X, n_voxel_Y, n_voxel_Z)
+            segmentation data
+        lut: dictionary
+            lookup table for the colormap of segmentation
+        dist_maps: dictionary ["group": distance_map]
+            dict w/ distance maps linked to respective groups
+        def_dict: dictionary ["group": deformation]
+            dictionary w/ deformation maps linked to respective groups
+        img_spacing: ndarray [3,]
+            voxel spacing in X,Y,Z plane
+        weight_table: dictionary
+            table with weights for the cost function
+        group_table: dictionary
+            table with group labels
+        dist_dict: dictionary
+            dict w/ information about groups and respective distance paramenters
+        lim_dict: dictionary
+            dict w/ parameters about shape of surgical path i.e. radius, length
+        """
 
 
         # create the target coords
@@ -50,7 +76,7 @@ class CostFunc:
         crit_struct = binarize_segmentation(self.seg_data, [lut[name] for name in crit])
         self.crit_struct = crit_struct
 
-        # create the deformable structures dictionary
+        # create the deformable structures dictionary w/ scored gradient
         corr_def_dict = {}
         for group, map in def_dict.items():
              def_grad = map
@@ -64,20 +90,29 @@ class CostFunc:
              def_grad[np.where(def_grad == -1)] = 0
              def_grad = def_grad * 0.1 #this is the step size
 
+             # actually weight the gradient map with values
              def_grad = grad_scalar + def_grad
              corr_def_dict[group] = def_grad
 
         self.def_dict = corr_def_dict
 
     def cyl_cost(self, cyl):
-        """ get the cost of the cylinder traveling through the deformables and the removable structure
-
-        :param cyl -- voxelization of the cylinder
-        :returns costvalue (scalar for cost); out_dict dictionary with [group and score and n# voxels]
         """
+        get the cost of the cylinder traveling through the deformables and the removable structure
 
-        from time import time
+        Parameters
+        ----------
+        cyl: ndarray [n_voxel_X, n_voxel_Y, n_voxel_Z]
+            voxelization of the cylinder of interest
 
+        Returns
+        -------
+        cost_value: float
+            computed cost value thru intersection
+        out_dict: dictionary ["Structure", cost_structure]
+            dictionary with the cost of each of the structures intersected used for analytics when optimizing
+
+        """
         # data are stored in the format  ["class": [score, num of voxels]]
         out_dict = {}
 
@@ -102,6 +137,14 @@ class CostFunc:
         return costvalue, out_dict
 
     def limit_cost(self):
+        """
+        the main cost calculation fo the algorithm. It runs thru all permuatations of the possible target points and entry points.
+        It takes all potential target points and generates the 16 point cylinder to calculate the cost.
+
+        Returns
+        -------
+
+        """
 
         # find the target coordinates
         target = binarize_segmentation(self.seg_data, self.lut["Target"])
@@ -117,13 +160,9 @@ class CostFunc:
         # map each target to each craniotomy
         for tar_idx, tar_pt in enumerate(target_pts[:1]):
 
-            tar_pt = np.array([260, 282, 33])
-
             crani_df = pd.DataFrame()
 
             for crani_idx, crani_pt in enumerate(crani_pts):
-
-                crani_pt = np.array([376, 209, 73])
 
                 # create 1 voxel cylinder which represents minimum path
                 cyl = Cylinder(crani_pt, tar_pt,
@@ -190,8 +229,6 @@ class CostFunc:
 
 
             target_df = pd.concat((target_df, tar_df))
-
-        #TODO write the JSON dump
 
         # score is the total cost
         target_df = target_df.reset_index().drop(['index'], axis=1)

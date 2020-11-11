@@ -47,7 +47,7 @@ for pt in pt_list:
     # create deformations
     gradient_maps = create_gradient_map(lut, seg_data, img_spacing)
 
-    # create distance maps
+    # create distance maps currently not in the code but can be added if distance is a parameter
     dist_maps = {}
     for name, subdict in dist_map_dict.items():
         group_memb = [key for key, value in LSB_class_group.items() if value["Group"] == subdict["Group"]]
