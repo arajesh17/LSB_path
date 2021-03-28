@@ -96,7 +96,7 @@ class CostFunc:
 
         self.def_dict = corr_def_dict
 
-    def cyl_cost(self, cyl):
+    def cyl_cost(self, cyl, im_spacing):
         """
         get the cost of the cylinder traveling through the deformables and the removable structure
 
@@ -104,6 +104,9 @@ class CostFunc:
         ----------
         cyl: ndarray [n_voxel_X, n_voxel_Y, n_voxel_Z]
             voxelization of the cylinder of interest
+
+        im_spacing: ndarray [x_dim, y_dim, z_dim]
+            the image spacing of the voxel dimensions
 
         Returns
         -------
@@ -116,21 +119,24 @@ class CostFunc:
         # data are stored in the format  ["class": [score, num of voxels]]
         out_dict = {}
 
+        # get the cubic mm3 of voxel dimensions of the image
+        cubic_vox = np.prod(im_spacing)
+
         # get deformable scores
         def_group = [k for k, v in self.group_table.items() if v["Class"] == "Deformable"]
         for group in def_group:
             def_grad = self.def_dict[group]
             def_intersect = check_intersect(def_grad, cyl)
-            out_dict[group] = [def_intersect, np.sum(np.logical_and(def_grad, cyl))]
+            out_dict[group] = [def_intersect * cubic_vox, np.sum(np.logical_and(def_grad, cyl))] #def grad already has cost in the segmentation
 
         # get removable structures
         for name, remov_struct in self.remov_dict.items():
             remov_intersect = check_intersect(remov_struct, cyl)
-            out_dict[name] = [remov_intersect * self.group_table[name]["Weight"], remov_intersect]
+            out_dict[name] = [remov_intersect * cubic_vox * self.group_table[name]["Weight"], remov_intersect]
 
         # get critical structure weights
         crit_intersect = check_intersect(self.crit_struct, cyl)
-        out_dict['Critical'] = [crit_intersect*1000, crit_intersect] # weights for crit structure is here
+        out_dict['Critical'] = [crit_intersect * cubic_vox * self.group_table['Critical']['Weight'], crit_intersect] # weights for crit structure is here
 
         costvalue = np.sum([v[0] for v in out_dict.values()])
 
@@ -158,7 +164,7 @@ class CostFunc:
         target_df = pd.DataFrame()
 
         # map each target to each craniotomy
-        for tar_idx, tar_pt in enumerate(target_pts[:1]):
+        for tar_idx, tar_pt in enumerate(target_pts):
 
             crani_df = pd.DataFrame()
 
@@ -183,7 +189,7 @@ class CostFunc:
 
 
                 # calculate the cost of the cylinder through the deformable
-                cost, cost_dict = self.cyl_cost(cone.voxel)
+                cost, cost_dict = self.cyl_cost(cone.voxel, self.img_spacing)
 
                 if np.any(np.logical_and(self.crit_struct, cyl.voxel)):
                     cost = np.inf

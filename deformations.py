@@ -2,6 +2,8 @@ from utils import binarize_segmentation
 from scipy.ndimage import binary_erosion
 from weights import LSB_class_group
 import numpy as np
+import nrrd
+
 
 # 1 get the lut with the different structures
 # 2 find the group which they belong to
@@ -58,3 +60,26 @@ def create_erosion_gradient(data, spacing, n_iter, runs=5):
         data = step
 
     return gradient_map
+
+def save_gradient_maps(outpth, hdr, gradientmaps):
+    """
+    Saves the gradient maps in one .nrrd file to use at output
+
+    Parameters
+    ----------
+    outpth: basestring
+        The output string where you want to save the gradient maps
+    gradientmaps: dict
+        The dictionary of the gradient maps created by create_gradient_maps method
+    hdr: dict
+        The hdr used to save the nrrd file output
+
+    Returns
+    -------
+    n/a
+
+    """
+
+    combined_grad_map = np.sum(list(gradientmaps.values()), axis=0)
+    print('Writing combined gradient path to {}'.format(outpth))
+    nrrd.write(outpth, combined_grad_map, hdr)

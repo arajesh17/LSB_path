@@ -75,7 +75,7 @@ def create_seg_hdr(im_hdr, seg_hdr, seg_data, bnds):
     hdr['measurement frame'] = seg_hdr['measurement frame']
 
     #color for the seg
-    values = np.unique(seg_data)[np.unique(seg_data) != 0]
+    values = np.unique(seg_data[seg_data != 0])
     #norm = mpl.colors.Normalize(vmin=values.min(), vmax=values.max())
     norm = mpl.colors.Normalize(vmin=bnds[0], vmax=bnds[1])
     cmap = mpl.cm.ScalarMappable(norm=norm, cmap=mpl.cm.jet_r)
@@ -88,10 +88,7 @@ def create_seg_hdr(im_hdr, seg_hdr, seg_data, bnds):
         #get color for score
         shape = seg_data[idx, :, :, :]
 
-        try:
-            score = np.unique(shape)[np.unique(shape) != 0][0] - 0.01 #TODO jank hardcoded b/c of the offset in the create heatmap method
-        except:
-            score = 1
+        score = 1
 
         color = cmap.to_rgba(score)
         #hdr['{}_Color'.format(root)] = 'R={0:.3f} G={1:.3f} B={2:.3f} A=1.000'.format(color[0], color[1], color[2])
@@ -190,13 +187,6 @@ def create_spider_map(fname, target, geometry, spacing, crani_pos = []):
     seg = [] # give option to run the code when crani_pos is defined
     if len(crani_pos) >= 1:
 
-        #cyl_im = np.zeros(geometry)
-        #cyl = Cylinder(crani_pos, target, limit_dict['cyl_radius'], limit_dict['cyl_radius'], limit_dict['cyl_radius'],
-        #               geometry, spacing)
-        #cyl.create_shape()
-        #cyl_im[np.where(cyl.voxel == 1)] = 1
-        #seg.append(cyl_im)
-
         cone_im = np.zeros(geometry)
         spacing = np.array([1, 1, 1])
         cone = Cylinder(crani_pos, target, limit_dict['crani_radius'], limit_dict['crani_radius'] / 2,
@@ -225,6 +215,8 @@ def create_spider_map(fname, target, geometry, spacing, crani_pos = []):
         cone = Cylinder(crani, target, limit_dict['crani_radius'], limit_dict['crani_radius']/2,
                         limit_dict['cyl_radius'], geometry, spacing)
         cone.create_shape2()
+        score = row['cost'][idx]
+        if score == np.inf: score = 99999
         cone_im[np.where(cone.voxel == 1)] = row['cost'][idx]
         seg.append(cone_im)
 
@@ -233,9 +225,10 @@ def create_spider_map(fname, target, geometry, spacing, crani_pos = []):
 
     return segmentation
 
+
 # set tunable variables
 wd = 'C:\\Users\\anand\\OneDrive - UW\\LSB_cohort\\'
-pt = '9'
+pt = '15'
 
 for app in ['MCF']:
     # set the variables for funsie
@@ -253,23 +246,33 @@ for app in ['MCF']:
                                  axis=1)  # slice spacing is defined as the normalized vector of the space transformation matrix
     geo = im.shape
 
-    spider = create_spider_map(csv, np.array([306, 257, 42]), geo, img_spacing)
-    myhdr = create_seg_hdr(hdr, seg_hdr, spider, [200, 2000])
-    spider[np.where(spider != 0)] = 1
-    nrrd.write('C:\\Users\\anand\\OneDrive - UW\\LSB_cohort\\pt_{0}\\spider_{1}.nrrd'.format(pt, app), spider, myhdr)
-
-    # create_target_heatmap(csv, geo)
-    thm = create_target_heatmap(csv, geo)
-    thm_hdr = create_seg_hdr(hdr, seg_hdr, thm, [0, 1.0])
-    thm[np.where(thm != 0)] = 1
-    nrrd.write(thm_out, thm, thm_hdr)
+#    # create_target_heatmap(csv, geo)
+#    thm = create_target_heatmap(csv, geo)
 #
+#    #TODO delete this jank shit
+#    #This is a work around to put all the points in one array instead of have [21, X, Y, Z] array. This saves memory
+#    thm = np.array([np.sum(thm, axis=0)])
+#
+#    thm_hdr = create_seg_hdr(hdr, seg_hdr, thm, [0, 1.0])
+#    thm[np.where(thm != 0)] = 1
+#    nrrd.write(thm_out, thm, thm_hdr)
+
+    spider = create_spider_map(csv, np.array([218, 327, 42]), geo, img_spacing, crani_pos=np.array([147, 438, 23]))
+    myhdr = create_seg_hdr(hdr, seg_hdr, spider, [0,200])
+    nrrd.write(join(wd, 'pt_{0}\\spider_test.nrrd'.format(pt, app)), spider.astype('uint8'), myhdr)
+
+    spider = create_spider_map(csv, np.array([72, 151, 58]), geo, img_spacing)
+    myhdr = create_seg_hdr(hdr, seg_hdr, spider, [200, 2000])
+    nrrd.write(join(wd, 'pt_{0}\\spider_{1}.nrrd'.format(pt, app)), spider.astype('uint8'), myhdr)
+
+
+#    spider = create_spider_map(csv, np.array([275, 312, 200]), geo, img_spacing)
+#    for i in range(spider.shape[0]):
+#        spider_1d = np.array([spider[i, :, :, :]])
+#        myhdr = create_seg_hdr(hdr, seg_hdr, spider_1d, [200, 2000])
+
+
     chm = create_crani_heatmap(csv, geo)
     chm_hdr = create_seg_hdr(hdr, seg_hdr, chm, [0, 1.0])
     chm[np.where(chm != 0)] = 1
     nrrd.write(chm_out, chm, chm_hdr)
-
-
-
-
-

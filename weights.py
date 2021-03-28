@@ -65,13 +65,13 @@ LSB_class_group = {
                                        "Weight": 3.0},
                 "PSCC":               {"Class": "Critical",
                                        "Group": "Coch_SCC",
-                                       "Weight": 500},
+                                       "Weight": 1000},
                 "LSCC":               {"Class": "Critical",
                                        "Group": "Coch_SCC",
-                                       "Weight": 500},
+                                       "Weight": 1000},
                 "SSCC":               {"Class": "Critical",
                                        "Group": "Coch_SCC",
-                                       "Weight": 500},
+                                       "Weight": 1000},
                 "Vestibule":          {"Class": "Critical",
                                        "Group": "Coch_SCC",
                                        "Weight": 1000},
@@ -100,7 +100,10 @@ LSB_class_group = {
                 "RS":                 {"Class": "Entry",
                                        "Group": "RS"},
                 "RS_middle":          {"Class": "Entry",
-                                       "Group": "RS"}
+                                       "Group": "RS"},
+                "Critical":           {"Class": "Special",
+                                       "Group": "Special",
+                                       "Weight": 1000}
                            }
 
 

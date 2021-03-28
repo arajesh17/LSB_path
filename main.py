@@ -1,5 +1,5 @@
 from costfunc import CostFunc
-from deformations import create_gradient_map
+from deformations import create_gradient_map, save_gradient_maps
 from loaddata import LoadData
 from entrypoint import EntryPoint
 from distancemap import DistanceMap
@@ -11,19 +11,21 @@ import numpy as np
 from os.path import join
 import nrrd
 
-pt_list = ['9']
+pt_list = ['29']
 wd = 'C:\\Users\\anand\\OneDrive - UW\\LSB_cohort'
+image_extension = 'T2_to'
+#image_extension = 'FFE'
 
 for pt in pt_list:
     # path to the loaded data
-    img_pth = glob(join(wd, 'pt_{}\\*FFE*.nrrd'.format(pt)))[0]
-    seg_pth = glob(join(wd, 'pt_{0}\\*{0}*egmentation-label.nrrd'.format(pt)))[0]
-    lup_tbl = glob(join(wd, 'pt_{0}\\*{0}*egmentation-label_ColorTable.ctbl'.format(pt)))[0]
+    img_pth = glob(join(wd, 'pt_{}\\*{}*.nrrd'.format(pt, image_extension)))[0]
+    seg_pth = glob(join(wd, 'pt_{0}\\*{0}*egmentation-label_resized.nrrd'.format(pt)))[0]
+    lup_tbl = glob(join(wd, 'pt_{0}\\*{0}*egmentation-label_resized_ColorTable.ctbl'.format(pt)))[0]
     fcsv = join(wd, 'pt_{}\\Craniotomy_Markers.fcsv'.format(pt))
 
     # outputted files
-    MCF_pth = 'C:\\Users\\anand\\OneDrive - UW\\LSB_cohort\\pt_{0}\\pt_{0}_MCF_ero3.csv'.format(pt)
-    RS_pth = 'C:\\Users\\anand\\OneDrive - UW\\LSB_cohort\\pt_{0}\\pt_{0}_RS_ero3.csv'.format(pt)
+    MCF_pth = 'C:\\Users\\anand\\OneDrive - UW\\LSB_cohort\\pt_{0}\\pt_{0}_MCF_resized.csv'.format(pt)
+    RS_pth = 'C:\\Users\\anand\\OneDrive - UW\\LSB_cohort\\pt_{0}\\pt_{0}_RS_resized.csv'.format(pt)
 
 
     # load the data space it correctly
@@ -46,6 +48,9 @@ for pt in pt_list:
 
     # create deformations
     gradient_maps = create_gradient_map(lut, seg_data, img_spacing)
+    gradient_map_pth = join(wd, 'pt_{0}\\pt_{0}_gradient.nrrd'.format(pt))
+    save_gradient_maps(gradient_map_pth, hdr, gradient_maps)
+
 
     # create distance maps currently not in the code but can be added if distance is a parameter
     dist_maps = {}

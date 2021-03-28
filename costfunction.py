@@ -93,7 +93,7 @@ class CostFunction:
             remov_scores.append(remov_intersect *
                                           weight_table[group]["Factor"])
         s = time()
-        print("took {} s to create removale intersections".format(s-s2))
+        print("took {} s to create removable intersections".format(s-s2))
 
 
         s2 = time()

@@ -106,19 +106,20 @@ def find_edge_points(target, struct, iter=1):
     Finds the boundary points of the target by eroding it by three iterations
     Then it finds the extrema of x,y,z points
 
-    :param target:
+    :param target: binary mask of the target segmentation
     :param struct: structure of the kernel to apply for erosion
     :param iter: int number of iterations to erode
     :return:
     """
 
+    """
     # erode 1 time but with a scaled structure reflecting the diameter of the cylinders that will be access channels
-
     for i in range(iter):
         eroded = binary_erosion(target, structure=struct, iterations=iter).astype(int)
         if len(np.where(eroded != 0)[0]) == 0: # make sure you don't iterate so many times it shirnks the target to nothing
             break
         target = eroded
+    """
 
     # key points:
     key_points = []
