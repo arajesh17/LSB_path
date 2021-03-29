@@ -188,7 +188,6 @@ def create_spider_map(fname, target, geometry, spacing, crani_pos = []):
     if len(crani_pos) >= 1:
 
         cone_im = np.zeros(geometry)
-        spacing = np.array([1, 1, 1])
         cone = Cylinder(crani_pos, target, limit_dict['crani_radius'], limit_dict['crani_radius'] / 2,
                         limit_dict['cyl_radius'], geometry, spacing)
         cone.create_shape2()
@@ -257,7 +256,7 @@ for app in ['MCF']:
 #    thm[np.where(thm != 0)] = 1
 #    nrrd.write(thm_out, thm, thm_hdr)
 
-    spider = create_spider_map(csv, np.array([132, 196, 26]), geo, img_spacing)
+    spider = create_spider_map(csv, np.array([132, 196, 25]), geo, img_spacing, crani_pos=np.array([89, 262, 13]))
     myhdr = create_seg_hdr(hdr, seg_hdr, spider, [0, 200])
     nrrd.write(join(wd, 'pt_{0}\\spider_test.nrrd'.format(pt, app)), spider.astype('uint8'), myhdr)
 

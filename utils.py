@@ -120,7 +120,7 @@ def create_rotation_matrix(vector1, vector2):
     axis2_v_hat = vector2 / np.linalg.norm(vector2)
 
     axis_of_rot = np.cross(axis1_v_hat, axis2_v_hat)
-    axis_of_rot = axis_of_rot / np.linalg.norm(axis_of_rot)
+    if np.linalg.norm(axis_of_rot) != 0: axis_of_rot = axis_of_rot / np.linalg.norm(axis_of_rot)
     angle_of_rot = np.arccos(np.dot(axis1_v_hat, axis2_v_hat))
 
     rotation = R.from_rotvec(axis_of_rot*angle_of_rot)

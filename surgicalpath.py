@@ -14,7 +14,7 @@ class Cylinder(object):
 
         self.ep = entrypoint
         self.targ = target
-        self.radii = [r1, r2, r3]
+        self.radii = [r1, r2, r3] #from proximal to distal
         self.geometry = geometry
         self.spacing = spacing
 
@@ -93,8 +93,10 @@ class Cylinder(object):
 
         for idx, radius in enumerate(self.radii):
 
+            radius = radius/self.spacing[idx]  # correct the radius to compensate for voxel spacing
+
             path_length = np.linalg.norm(vhat)
-            x_point = path_length * ((idx) / (len(self.radii) - 1)) # xpoint is a function of number of points of radii
+            x_point = path_length * ((idx) / (len(self.radii) - 1))  # xpoint is a function of number of points of radii
 
             # create the y and z points of the circle
             y_circle, z_circle = create_circle(radius, radius, n=num)
@@ -175,6 +177,9 @@ def create_voxelized_path(pts, non_voxelized_pts, geometry, t=''):
     Creates a voxelized form with the inputted vertices
     """
 
+    #TODO remove
+    if np.any(np.isnan(non_voxelized_pts)):
+       print('gotcha')
     convhull = ConvexHull(non_voxelized_pts)
     delan = Delaunay(non_voxelized_pts)
     print('number of vertices for the delaunay shape {}'.format(delan.vertices.shape))
