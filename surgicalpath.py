@@ -20,6 +20,9 @@ class Cylinder(object):
 
     def create_shape(self, num=20):
         """
+
+        THIS IS OUTDATED CODE WITH IMPROPER GEOMETRY
+
         Creates the Cylinder shape
         :param num:
         :return:
@@ -77,7 +80,9 @@ class Cylinder(object):
     def create_shape2(self, num=20):
         """
         Create a cone in the X plane first, then rotate it to the correct space
-        :param num:
+        This does not have an error with the geometry of the shape. It will have the correct X-Y dimensions
+
+        :param num: The number of points along the circumference that should be used to create
         :return:
         """
 

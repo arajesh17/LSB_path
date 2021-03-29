@@ -191,7 +191,7 @@ def create_spider_map(fname, target, geometry, spacing, crani_pos = []):
         spacing = np.array([1, 1, 1])
         cone = Cylinder(crani_pos, target, limit_dict['crani_radius'], limit_dict['crani_radius'] / 2,
                         limit_dict['cyl_radius'], geometry, spacing)
-        cone.create_shape()
+        cone.create_shape2()
         cone_im[np.where(cone.voxel == 1)] = 1
         seg.append(cone_im)
 
@@ -234,7 +234,7 @@ for app in ['MCF']:
     # set the variables for funsie
     im_pth = join(wd, 'pt_{}'.format(pt), 'pt_{}_padded.nrrd'.format(pt))
     seg_pth = glob(join(wd, 'pt_{0}\\?t_{0}_?egmentation.seg.nrrd'.format(pt)))[0]
-    csv = join(wd, 'pt_{0}\\pt_{0}_{1}_ero3.csv'.format(pt, app))
+    csv = join(wd, 'pt_{0}\\pt_{0}_{1}_resized.csv'.format(pt, app))
 
     # set the variables for outputting files
     chm_out = join(wd, 'pt_{0}\\chm_{1}.nrrd'.format(pt, app))
@@ -257,8 +257,8 @@ for app in ['MCF']:
 #    thm[np.where(thm != 0)] = 1
 #    nrrd.write(thm_out, thm, thm_hdr)
 
-    spider = create_spider_map(csv, np.array([218, 327, 42]), geo, img_spacing, crani_pos=np.array([147, 438, 23]))
-    myhdr = create_seg_hdr(hdr, seg_hdr, spider, [0,200])
+    spider = create_spider_map(csv, np.array([132, 196, 26]), geo, img_spacing)
+    myhdr = create_seg_hdr(hdr, seg_hdr, spider, [0, 200])
     nrrd.write(join(wd, 'pt_{0}\\spider_test.nrrd'.format(pt, app)), spider.astype('uint8'), myhdr)
 
     spider = create_spider_map(csv, np.array([72, 151, 58]), geo, img_spacing)

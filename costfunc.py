@@ -174,13 +174,13 @@ class CostFunc:
                 cyl = Cylinder(crani_pt, tar_pt,
                                self.lim_dict['cyl_radius'], self.lim_dict['cyl_radius'], self.lim_dict['cyl_radius'],
                                self.seg_data.shape, self.img_spacing)
-                cyl.create_shape(num=5)
+                cyl.create_shape2(num=5)
 
                 # create the cone which represents costs
                 cone = Cylinder(crani_pt, tar_pt,
                                 self.lim_dict['crani_radius'], self.lim_dict['crani_radius']/2, self.lim_dict['cyl_radius'],
                                 self.seg_data.shape, self.img_spacing)
-                cone.create_shape(num=20)
+                cone.create_shape2(num=20)
 
                 # create a dataframe to store the data
                 ser_df = pd.DataFrame()
