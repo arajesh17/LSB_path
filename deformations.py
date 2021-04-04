@@ -40,7 +40,8 @@ def create_gradient_map(lut, data, img_spacing, group_table= LSB_class_group):
         def_struct = binarize_segmentation(data, [lut[s] for s in lut.keys() if group_table[s]["Group"] == group])
         n_iter = group_table[group]['Iterations']
         def_grad = create_erosion_gradient(def_struct, img_spacing, n_iter)
-        gradient_maps[group] = def_grad
+        def_grad_scaled = set_erosion_gradient(def_grad, group_table[group]['Weight'], group_table[group]['Factor'])
+        gradient_maps[group] = def_grad_scaled
 
     return gradient_maps
 
@@ -60,6 +61,28 @@ def create_erosion_gradient(data, spacing, n_iter, runs=5):
         data = step
 
     return gradient_map
+
+def set_erosion_gradient(data, base, factor):
+    """
+    allows for scaling of gradient_map based on input weights
+
+    Parameters
+    ----------
+    data: ndarray gradient mask
+    base: base scalar to set all elements of the gradient
+    factor: factor scalar to increase at each gradient
+
+    Returns
+    -------
+    gradient_map_scaled: ndarray of gradient map that is scaled to the appropriate values
+
+    """
+    factor_map = data * factor
+    base_map = np.zeros(data.shape)
+    base_map[np.where(data > 0)] = base - factor
+    gradient_map_scaled = base_map + factor_map
+
+    return gradient_map_scaled
 
 def save_gradient_maps(outpth, hdr, gradientmaps):
     """

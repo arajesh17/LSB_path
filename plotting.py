@@ -227,7 +227,7 @@ def create_spider_map(fname, target, geometry, spacing, crani_pos = []):
 
 # set tunable variables
 wd = 'C:\\Users\\anand\\OneDrive - UW\\LSB_cohort\\'
-pt = '15'
+pt = '29'
 
 for app in ['MCF']:
     # set the variables for funsie
@@ -256,9 +256,9 @@ for app in ['MCF']:
 #    thm[np.where(thm != 0)] = 1
 #    nrrd.write(thm_out, thm, thm_hdr)
 
-    spider = create_spider_map(csv, np.array([132, 196, 25]), geo, img_spacing, crani_pos=np.array([89, 262, 13]))
+    spider = create_spider_map(csv, np.array([82, 155, 57]), geo, img_spacing, crani_pos=np.array([39, 135, 83]))
     myhdr = create_seg_hdr(hdr, seg_hdr, spider, [0, 200])
-    nrrd.write(join(wd, 'pt_{0}\\spider_test.nrrd'.format(pt, app)), spider.astype('uint8'), myhdr)
+    nrrd.write(join(wd, 'pt_{0}\\spider_MCF_39_135_83.nrrd'.format(pt, app)), spider.astype('uint8'), myhdr)
 
     spider = create_spider_map(csv, np.array([72, 151, 58]), geo, img_spacing)
     myhdr = create_seg_hdr(hdr, seg_hdr, spider, [200, 2000])

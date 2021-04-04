@@ -4,9 +4,9 @@ microscope_dict = {"Radius": 35,
                    "Focal Length": 300,
                    "Min Distal Radius": 1.5}
 
-limit_dict = {"w_dist": 0.0, # weight for how much min_distance effects the cost function in the costfunc limit_cost() method
-              "cyl_radius": 0.25, # the radius for the cylinders evaluating the limit_cost() function
-              "crani_radius": 5}
+limit_dict = {"w_dist": 0.0,  # weight for how much min_distance affects costfunction in costfunc limit_cost() method
+              "cyl_radius": 0.5,  # the radius for the cylinders at distal target
+              "crani_radius": 5}  # the radius for cylinder at the crani
 
 """ LSB class weights:
 These are the weights for the different structures -- trying to give amore comprehensive way to score their values
@@ -39,18 +39,20 @@ LSB_class_group = {
                                        "Group": "Noise"},
                 "Brain":              {"Class": "Deformable",
                                        "Group": "Brain",
-                                       "Weight": 0.101,
-                                       "Iterations": 2},
+                                       "Weight": 0.151,
+                                       "Factor": 0.05,
+                                       "Iterations": 2}, #the size of the erosion kernel in mm
                 "Cerebellum":         {"Class": "Deformable",
                                        "Group": "Cerebellum",
-                                       "Weight": 0.1,
-                                       "Iterations": 1},
+                                       "Weight": 0.15,
+                                       "Factor": 0.05,
+                                       "Iterations": 1}, #the size of the erosion kernel in mm
                 "Bone":               {"Class": "Removable",
                                        "Group": "Bone",
-                                       "Weight": 0.2},
+                                       "Weight": 0.15},
                 "Mastoid":            {"Class": "Removable",
                                        "Group": "Bone",
-                                       "Weight": 0.15},
+                                       "Weight": 0.10},
                 "Tissue":             {"Class": "Removable",
                                        "Group": "Tissue",
                                        "Weight": 0.15},

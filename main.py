@@ -11,7 +11,7 @@ import numpy as np
 from os.path import join
 import nrrd
 
-pt_list = ['9', '10', '15', '27', '28', '29']
+pt_list = ['6', '7', '8', '9', '10', '28', '29']
 wd = 'C:\\Users\\anand\\OneDrive - UW\\LSB_cohort'
 image_extension = 'T2_resized'
 #image_extension = 'FFE'
