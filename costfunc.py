@@ -96,52 +96,6 @@ class CostFunc:
 
         self.def_dict = corr_def_dict
 
-    def cyl_cost(self, cyl, im_spacing):
-        """
-        get the cost of the cylinder traveling through the deformables and the removable structure
-
-        Parameters
-        ----------
-        cyl: ndarray [n_voxel_X, n_voxel_Y, n_voxel_Z]
-            voxelization of the cylinder of interest
-
-        im_spacing: ndarray [x_dim, y_dim, z_dim]
-            the image spacing of the voxel dimensions
-
-        Returns
-        -------
-        cost_value: float
-            computed cost value thru intersection
-        out_dict: dictionary ["Structure", cost_structure]
-            dictionary with the cost of each of the structures intersected used for analytics when optimizing
-
-        """
-        # data are stored in the format  ["class": [score, num of voxels]]
-        out_dict = {}
-
-        # get the cubic mm3 of voxel dimensions of the image
-        cubic_vox = np.prod(im_spacing)
-
-        # get deformable scores
-        def_group = [k for k, v in self.group_table.items() if v["Class"] == "Deformable"]
-        for group in def_group:
-            def_grad = self.def_dict[group]
-            def_intersect = check_intersect(def_grad, cyl)
-            out_dict[group] = [def_intersect * cubic_vox, np.sum(np.logical_and(def_grad, cyl))] #def grad already has cost in the segmentation
-
-        # get removable structures
-        for name, remov_struct in self.remov_dict.items():
-            remov_intersect = check_intersect(remov_struct, cyl)
-            out_dict[name] = [remov_intersect * cubic_vox * self.group_table[name]["Weight"], remov_intersect]
-
-        # get critical structure weights
-        crit_intersect = check_intersect(self.crit_struct, cyl)
-        out_dict['Critical'] = [crit_intersect * cubic_vox * self.group_table['Critical']['Weight'], crit_intersect] # weights for crit structure is here
-
-        costvalue = np.sum([v[0] for v in out_dict.values()])
-
-        return costvalue, out_dict
-
     def limit_cost(self):
         """
         the main cost calculation fo the algorithm. It runs thru all permuatations of the possible target points and entry points.
