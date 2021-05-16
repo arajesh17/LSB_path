@@ -7,12 +7,15 @@ class EntryPoint:
 
     def __init__(self, fcsv, hdr):
         """
-        the class to wrap different methods to find the entry points of the input crani
+        Class to wrap different methods to find the entry points of the input craniotomy
 
-        :param fcsv: the filename of the .fcsv file with the fiducial information
-        :param hdr: the nrrd header file of the image
+        Parameters
+        ----------
+        fcsv: str
+            the filename of the fcsv file with the fiducial information
+        hdr: str
+            the filename of the header for the image
         """
-
         self.fcsv = fcsv
         self.hdr = hdr
 
@@ -46,11 +49,13 @@ class EntryPoint:
 
     def from_fiducials(self):
         """
-        gets boundary points of craniotomy from the fidicuial marks created in slicer
-
-        :return:
-        RS_ijk - RS fiducial coordinates in ijk coordinate system
-        MCF_ijk - MCF fiducial coordinates in ijk coordinate system
+        computes boundary points of craniotomy from the fiducial marks created in slicer
+        Returns
+        -------
+        MCF_ijk: ndarray
+            MCF fiducial coordinates in ijk coordinate system
+        RS_ijk: ndarray
+            RS fiducial coordinates in ijk coordinate system
         """
 
         # load the data from the the fiducials

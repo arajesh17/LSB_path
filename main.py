@@ -11,12 +11,13 @@ import numpy as np
 from os.path import join
 import nrrd
 
-pt_list = ['6', '7', '8', '9', '10', '28', '29']
+pt_list = ['10']
 wd = 'C:\\Users\\anand\\OneDrive - UW\\LSB_cohort'
 image_extension = 'T2_resized'
 #image_extension = 'FFE'
 
 for pt in pt_list:
+
     # path to the loaded data
     img_pth = glob(join(wd, 'pt_{}\\*{}*.nrrd'.format(pt, image_extension)))[0]
     seg_pth = glob(join(wd, 'pt_{0}\\*{0}*egmentation-label_resized.nrrd'.format(pt)))[0]
@@ -24,8 +25,8 @@ for pt in pt_list:
     fcsv = join(wd, 'pt_{}\\Craniotomy_Markers.fcsv'.format(pt))
 
     # outputted files
-    MCF_pth = 'C:\\Users\\anand\\OneDrive - UW\\LSB_cohort\\pt_{0}\\pt_{0}_MCF_resized.csv'.format(pt)
-    RS_pth = 'C:\\Users\\anand\\OneDrive - UW\\LSB_cohort\\pt_{0}\\pt_{0}_RS_resized.csv'.format(pt)
+    MCF_pth = 'C:\\Users\\anand\\OneDrive - UW\\LSB_cohort\\pt_{0}\\pt_{0}_MCF_resized_weights.csv'.format(pt)
+    RS_pth = 'C:\\Users\\anand\\OneDrive - UW\\LSB_cohort\\pt_{0}\\pt_{0}_RS_resized_weights.csv'.format(pt)
 
 
     # load the data space it correctly
@@ -61,9 +62,9 @@ for pt in pt_list:
         group_dist = dm.cdist("euclidean")
         dist_maps[name] = group_dist
 
-    MCF_cf = CostFunc(MCF_entry, seg_data, lut, dist_maps, gradient_maps, img_spacing)
-    MCF_cf.limit_cost()
-    MCF_cf.save_dataframe(MCF_pth)
+#    MCF_cf = CostFunc(MCF_entry, seg_data, lut, dist_maps, gradient_maps, img_spacing)
+#    MCF_cf.limit_cost()
+#    MCF_cf.save_dataframe(MCF_pth)
 
     RS_cf = CostFunc(RS_entry, seg_data, lut, dist_maps, gradient_maps, img_spacing)
     RS_cf.limit_cost()

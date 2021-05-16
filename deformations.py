@@ -46,7 +46,26 @@ def create_gradient_map(lut, data, img_spacing, group_table= LSB_class_group):
     return gradient_maps
 
 def create_erosion_gradient(data, spacing, n_iter, runs=5):
-    """ Creates an erosiion gradient for the images used for the deformability approximation"""
+    """
+    Creates an erosion gradient for the images used for the deformability approximation
+    General method consists of consecutive binary erosions with a structured kernel
+
+    Parameters
+    ----------
+    data: ndarray
+        segmented image data in ndarray
+    spacing: ndarray
+        the x,y,z voxel dimensions of the data
+    n_iter: int
+        number of iterations to erode at each step
+    runs:  int
+        number of steps to run in gradient
+
+    Returns
+    -------
+    gradient_map: ndarray
+        segmented gradient map of the image
+    """
 
     step_dim = 10 # dimensions of each step in mm
 

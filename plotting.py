@@ -194,6 +194,8 @@ def create_spider_map(fname, target, geometry, spacing, crani_pos = []):
         cone_im[np.where(cone.voxel == 1)] = 1
         seg.append(cone_im)
 
+        print('Cone score', np.sum(cone.voxel) / np.prod(img_spacing))
+
         # create 4D image
         segmentation = np.stack(seg, axis=0)
 
@@ -215,6 +217,9 @@ def create_spider_map(fname, target, geometry, spacing, crani_pos = []):
                         limit_dict['cyl_radius'], geometry, spacing)
         cone.create_shape2()
         score = row['cost'][idx]
+
+        print('Cone score', np.sum(cone.voxel) / np.prod(img_spacing))
+
         if score == np.inf: score = 99999
         cone_im[np.where(cone.voxel == 1)] = row['cost'][idx]
         seg.append(cone_im)
@@ -227,7 +232,7 @@ def create_spider_map(fname, target, geometry, spacing, crani_pos = []):
 
 # set tunable variables
 wd = 'C:\\Users\\anand\\OneDrive - UW\\LSB_cohort\\'
-pt = '29'
+pt = '15'
 
 for app in ['MCF']:
     # set the variables for funsie
@@ -256,9 +261,11 @@ for app in ['MCF']:
 #    thm[np.where(thm != 0)] = 1
 #    nrrd.write(thm_out, thm, thm_hdr)
 
-    spider = create_spider_map(csv, np.array([82, 155, 57]), geo, img_spacing, crani_pos=np.array([39, 135, 83]))
+
+
+    spider = create_spider_map(csv, np.array([130, 196, 25]), geo, img_spacing, crani_pos=np.array([75, 169, 67]))
     myhdr = create_seg_hdr(hdr, seg_hdr, spider, [0, 200])
-    nrrd.write(join(wd, 'pt_{0}\\spider_MCF_39_135_83.nrrd'.format(pt, app)), spider.astype('uint8'), myhdr)
+    nrrd.write(join(wd, 'pt_{0}\\spider_MCF_152_130_24.nrrd'.format(pt, app)), spider.astype('uint8'), myhdr)
 
     spider = create_spider_map(csv, np.array([72, 151, 58]), geo, img_spacing)
     myhdr = create_seg_hdr(hdr, seg_hdr, spider, [200, 2000])

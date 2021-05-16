@@ -8,12 +8,21 @@ class LoadData:
     @staticmethod
     def load_segmentation(pth, lookuptable):
         """
-        loads segmentation and binarizes it to return
 
-        :param self:
-        :param pth: is the path to the segmentation in nrrd format
-        :param lookuptable:  is the path to the lookup table for the labeling of nrrd segmentation
-        :return:  [brain_seg, bone_seg, air_seg, tumor_seg, nerve_seg, cochlea_seg]
+        Parameters
+        ----------
+        pth: string
+            the path to segmentation in an nrrd format
+        lookuptable: basestring
+            the path to to lookup table for the labeling of the nnrd sgementation defined in pth
+
+        Returns
+        -------
+        data: ndarray
+            the segmentation data in a binary array
+        label_dict: dict
+            dictionary containing keys as string file name and values as integer value from lookup table:
+            Examples: {"Brain": 1, "Cerebellum": 2}
         """
         data, hdr = nrrd.read(pth)
 

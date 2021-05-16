@@ -191,8 +191,9 @@ class CostFunc:
                 # calculate the cost of the cylinder through the deformable
                 cost, cost_dict = self.cyl_cost(cone.voxel, self.img_spacing)
 
-                if np.any(np.logical_and(self.crit_struct, cyl.voxel)):
-                    cost = np.inf
+                # code to render the intersection of critical structures as infinity
+                #if np.any(np.logical_and(self.crit_struct, cyl.voxel)):
+                #    cost = np.inf
 
                 ser_df['cost'] = cost
                 for key, value in cost_dict.items():
