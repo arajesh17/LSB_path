@@ -155,28 +155,6 @@ class CostFunc:
                 for key, value in cost_dict.items():
                     ser_df[key] = [value]
 
-                """
-                #find the miminimum dist by finding the minimum intersection between distance map and the cylinder
-                intersect = self.dist_maps['Dist_Coch_SCC'][np.where(cyl.voxel == 1)]
-                min_dist = np.min(intersect)
-                ser['min_dist'] = [min_dist]
-                
-                # calculate the score with the formula
-                # score = cost - cost * w_dist * log(dist) or simplified to score = cost(1 - w_dist * log(dist))
-                # added np.log2(min_dist + 1) for two reasons
-                # 1) we want the highest cost to be for when the min_dist == 0, which will be then just defined as score = np.inf
-                # 2) base 2 log has a greater slope, which gives a greater weighting for increases in min_dist as we go to larger values
-                w_dist = self.lim_dict['w_dist']
-
-                # see if the cylinder intersects with any of our critical structures
-                if np.any(np.logical_and(self.crit_struct, cyl.voxel)):
-                    min_dist = 0
-                if min_dist == 0:
-                    ser['score'] = np.inf
-                else:
-                    ser['score'] = cost*(1 - w_dist * np.log2(min_dist + 1))
-                """
-
                 # add to the crani_df
                 crani_df = pd.concat((crani_df, ser_df))
 
@@ -189,7 +167,6 @@ class CostFunc:
             tar_df['cost'] = [crani_df['cost'].values]
             for key in cost_dict.keys():
                 tar_df[key] = [crani_df[key].values]
-
 
             target_df = pd.concat((target_df, tar_df))
 
