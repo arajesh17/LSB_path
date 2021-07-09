@@ -146,13 +146,13 @@ class Cylinder(object):
         nrrd.write(fname, self.voxel, fname, hdr)
         print('saved file at {}'.format(fname))
 
-def create_coordinate_window(pts, shape):
+def create_coordinate_window(pt_cloud_coords, shape):
     """
     returns a set of coordinates bound by the points
 
     Parameters
     ----------
-    pts: array [n, p]
+    pt_cloud_coords: array [n, p]
         array of points with n as the dimension of the points and p as the number of points
     shape: array
         array of shape of point cloud space in n dimensions
@@ -161,6 +161,8 @@ def create_coordinate_window(pts, shape):
     -------
 
     """
+    # round coordinates to integers
+    pts = np.around(pt_cloud_coords).astype(int)
 
     def lowlim(floor):
         if floor < 0:
@@ -186,28 +188,30 @@ def create_coordinate_window(pts, shape):
     return coords
 
 
-def create_voxelized_path(pts, non_voxelized_pts, geometry, t=''):
+def create_voxelized_path(pts, geometry):
     """
     takes the points of a shape in cartesian space and converts them into a convex hull, then converts the convex hull
     into a point cloud in voxel space. then applies a binary closing to voxelized shape to close the voxelized shape.
 
     Parameters
     ----------
-    pts
-    non_voxelized_pts
-    geometry
-    t
+    pts: array  [N, P]
+        list of vertices of the shape in form NxP where N is number of axes of coordinates and P is number of vertices
+    geometry: array [N]
+        geometry of the point cloud space array
 
     Returns
     -------
+    voxelized_path_closed: array
+        point cloud of voxels for inputted vertices
 
     """
     #TODO go sequetially to see the timing of each of the steps of this function to optimize for speed
 
-    if np.any(np.isnan(non_voxelized_pts)):
+    if np.any(np.isnan(pts)):
        raise ValueError("a point passed to be voxelized has a null value")
 
-    convhull = ConvexHull(non_voxelized_pts)
+    convhull = ConvexHull(pts)
     testpoints = create_coordinate_window(pts, geometry)
 
     # find the voxels tht fall within the convex hull
@@ -223,8 +227,7 @@ def create_voxelized_path(pts, non_voxelized_pts, geometry, t=''):
     within = tp[idx].T
     voxelized_path[within[0], within[1], within[2]] = True
 
-    ax = geometry
-
+    # close shape to fill any holest
     voxelized_path_closed = binary_closing(voxelized_path,
                                            structure=np.ones((5, 5, 5))
                                            ).astype(int)
