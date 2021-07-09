@@ -1,4 +1,4 @@
-from utils import binarize_segmentation
+from utils import binarize_segmentation, reflect
 from scipy.ndimage import binary_erosion
 from weights import LSB_class_group
 import numpy as np
@@ -38,9 +38,15 @@ def create_gradient_map(lut, data, img_spacing, group_table= LSB_class_group):
     def_group = [k for k, v in group_table.items() if v["Class"] == "Deformable"]
     for group in def_group:
         def_struct = binarize_segmentation(data, [lut[s] for s in lut.keys() if group_table[s]["Group"] == group])
+#        if group == "Brain": #TODO remove
+#           def_struct = reflect(def_struct, 85)
         n_iter = group_table[group]['Iterations']
         def_grad = create_erosion_gradient(def_struct, img_spacing, n_iter)
         def_grad_scaled = set_erosion_gradient(def_grad, group_table[group]['Weight'], group_table[group]['Factor'])
+#        if group == "Brain": #TODO remove
+#            out_array = np.zeros(def_grad_scaled.shape)
+#            out_array[:, :, 85:] = def_grad_scaled[:, :, 85:]
+#            def_grad_scaled = out_array
         gradient_maps[group] = def_grad_scaled
 
     return gradient_maps

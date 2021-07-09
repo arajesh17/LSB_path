@@ -61,16 +61,23 @@ class EntryPoint:
         # load the data from the the fiducials
         f = pd.read_csv(self.fcsv, header=2)
 
+        # drop na values in description
+        f = f.dropna(subset=['desc'])
+
         # MCF
-        MCF_RAS = f.loc[f['desc'] == 'MCF'][['x', 'y', 'z']].values
+        MCF_RAS = f.loc[f['desc'].str.contains('MCF')][['x', 'y', 'z']].values
         MCF_ijk = np.array([convert_RAS_to_ijk(self.hdr, x) for x in MCF_RAS])
 
         # RS
-        RS_RAS = f.loc[f['desc'] == 'RS'][['x', 'y', 'z']].values
+        RS_RAS = f.loc[f['desc'].str.contains('RS')][['x', 'y', 'z']].values
         RS_ijk = np.array([convert_RAS_to_ijk(self.hdr, x) for x in RS_RAS])
 
         #debugging to set an negative values to zero in case fiducials are placed outside of range
         MCF_ijk[np.where(MCF_ijk < 0)] = 0
         RS_ijk[np.where(RS_ijk < 0)] = 0
+
+        # store sigmoid point
+        sig_RAS = f.loc[f['desc'].str.contains('Sigmoid')][['x', 'y', 'z']].values[-1]
+        self.sigmoid = convert_RAS_to_ijk(self.hdr, sig_RAS)
 
         return MCF_ijk, RS_ijk

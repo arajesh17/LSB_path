@@ -82,8 +82,14 @@ class Cylinder(object):
         Create a cone in the X plane first, then rotate it to the correct space
         This does not have an error with the geometry of the shape. It will have the correct X-Y dimensions
 
-        :param num: The number of points along the circumference that should be used to create
-        :return:
+        Parameters
+        ----------
+        num: int
+            The number of points along the circumference that should be used to create
+
+        Returns
+        -------
+
         """
 
         # instantiate output array for data points
@@ -93,7 +99,7 @@ class Cylinder(object):
 
         for idx, radius in enumerate(self.radii):
 
-            radius = radius/self.spacing[idx]  # correct the radius to compensate for voxel spacing
+            radius = radius/self.spacing[idx]  # correct the radius to compensate for voxel spacing #TODO bug
 
             path_length = np.linalg.norm(vhat)
             x_point = path_length * ((idx) / (len(self.radii) - 1))  # xpoint is a function of number of points of radii
@@ -142,10 +148,18 @@ class Cylinder(object):
 
 def create_coordinate_window(pts, shape):
     """
-    :param pts: nxp array of points in shape (n, p)
-    :return:  coords :array in shape (x_range*y_range*z_range , p)
-    #TODO there is a bug with this function: if the pts are negative -- then it will return negative values and these
-    will be plotted at the limits of the shape of the output array
+    returns a set of coordinates bound by the points
+
+    Parameters
+    ----------
+    pts: array [n, p]
+        array of points with n as the dimension of the points and p as the number of points
+    shape: array
+        array of shape of point cloud space in n dimensions
+
+    Returns
+    -------
+
     """
 
     def lowlim(floor):
@@ -174,17 +188,29 @@ def create_coordinate_window(pts, shape):
 
 def create_voxelized_path(pts, non_voxelized_pts, geometry, t=''):
     """
-    Creates a voxelized form with the inputted vertices
-    """
+    takes the points of a shape in cartesian space and converts them into a convex hull, then converts the convex hull
+    into a point cloud in voxel space. then applies a binary closing to voxelized shape to close the voxelized shape.
 
-    #TODO remove
+    Parameters
+    ----------
+    pts
+    non_voxelized_pts
+    geometry
+    t
+
+    Returns
+    -------
+
+    """
+    #TODO go sequetially to see the timing of each of the steps of this function to optimize for speed
+
     if np.any(np.isnan(non_voxelized_pts)):
-       print('gotcha')
+       raise ValueError("a point passed to be voxelized has a null value")
+
     convhull = ConvexHull(non_voxelized_pts)
-    delan = Delaunay(non_voxelized_pts)
-    print('number of vertices for the delaunay shape {}'.format(delan.vertices.shape))
     testpoints = create_coordinate_window(pts, geometry)
 
+    # find the voxels tht fall within the convex hull
     bool_out = vectorized_in_hull(testpoints, convhull)
 
     voxelized_path = np.zeros(geometry)
@@ -203,17 +229,3 @@ def create_voxelized_path(pts, non_voxelized_pts, geometry, t=''):
                                            structure=np.ones((5, 5, 5))
                                            ).astype(int)
     return voxelized_path_closed
-
-#im_pth =
-#out_pth =
-
-
-#EP = np.array([376, 300, 50])
-#TARG = np.array([300, 215, 73])
-#
-#RADI = np.array([5, 2.5, 0.25])
-#GEO = np.array([512, 512, 124])
-#SPACING = np.array([0.3515625, 0.3515625, 0.49999723])
-#cyl = Cylinder(EP, TARG, RADI[0], RADI[1], RADI[2], GEO, SPACING)
-#cyl.create_shape2()
-#

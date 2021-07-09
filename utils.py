@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.spatial.transform import Rotation as R
-from scipy.ndimage import binary_erosion, generate_binary_structure
+from scipy.ndimage import center_of_mass
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from weights import microscope_dict
@@ -372,3 +372,64 @@ def in2d_unsorted(arr1, arr2, axis=1, consider_sort=False):
     idx = sorter[arr3.searchsorted(arr4, sorter=sorter)]
 
     return idx
+
+def reflect(im, midpoint, ax=2):
+    """
+
+    Parameters
+    ----------
+    im: array
+        array of segmented image
+    midpoint: int
+        midsaggital plane along which the segmentation will be reflected
+    axis: int
+        axis along which the array will be reflected
+
+    Returns
+    -------
+    reflected_im: array
+        array with the segmented image reflected over the midsagital plane
+    """
+
+    if ax != 2:
+        return ValueError("Code not set up for axis other than 2, please add into method")
+
+    size = im.shape[2]
+    rev_start = midpoint - (size-midpoint)
+
+    normal_im = im[:, :, midpoint:]
+    rev_im = np.flip(normal_im, axis=ax)
+
+    reflected_im = np.zeros(im.shape)
+    reflected_im[:, :, midpoint:] = normal_im
+    reflected_im[:, :, rev_start:midpoint] = rev_im
+
+    return reflected_im
+
+def normalize_head_size(dist_pt, seg_data, lut, img_spacing):
+    """
+    method to find the head size to normalize raw costs based on patient head size. The distal point is point furthest
+    from center of the brain
+    Parameters
+    ----------
+    dist_pt: ndarray
+        3d coordinates of the distal point to measure
+    seg_data: ndarray
+        segmentation of structures
+    lut: dict
+        dictionary of names of structures with corresponding integer values
+    img_spacing:
+        voxel dimension of the image to normalize the size to mm
+    Returns
+    -------
+
+    """
+
+    # find center of mass of the cochlea segmentation
+    cochlea = binarize_segmentation(seg_data, lut['Cochlea'])
+    prox_pt = center_of_mass(cochlea)
+
+    # distance between prox_pt and dist_pt normalized by img_spacing
+    head_size = np.sqrt(np.sum(((prox_pt-dist_pt) * img_spacing)**2))
+
+    return head_size

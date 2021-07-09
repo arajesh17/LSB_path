@@ -234,11 +234,11 @@ def create_spider_map(fname, target, geometry, spacing, crani_pos = []):
 wd = 'C:\\Users\\anand\\OneDrive - UW\\LSB_cohort\\'
 pt = '15'
 
-for app in ['MCF']:
+for app in ['RS']:
     # set the variables for funsie
     im_pth = join(wd, 'pt_{}'.format(pt), 'pt_{}_padded.nrrd'.format(pt))
     seg_pth = glob(join(wd, 'pt_{0}\\?t_{0}_?egmentation.seg.nrrd'.format(pt)))[0]
-    csv = join(wd, 'pt_{0}\\pt_{0}_{1}_resized.csv'.format(pt, app))
+    csv = join(wd, 'pt_{0}\\pt_{0}_{1}_resized_weights.csv'.format(pt, app))
 
     # set the variables for outputting files
     chm_out = join(wd, 'pt_{0}\\chm_{1}.nrrd'.format(pt, app))
@@ -263,13 +263,13 @@ for app in ['MCF']:
 
 
 
-    spider = create_spider_map(csv, np.array([130, 196, 25]), geo, img_spacing, crani_pos=np.array([75, 169, 67]))
+    spider = create_spider_map(csv, np.array([130, 196, 25]), geo, img_spacing, crani_pos=np.array([49, 136, 9]))
     myhdr = create_seg_hdr(hdr, seg_hdr, spider, [0, 200])
-    nrrd.write(join(wd, 'pt_{0}\\spider_MCF_152_130_24.nrrd'.format(pt, app)), spider.astype('uint8'), myhdr)
+    nrrd.write(join(wd, 'pt_{0}\\spider_{1}_49_136_9.nrrd'.format(pt, app)), spider.astype('uint8'), myhdr)
 
-    spider = create_spider_map(csv, np.array([72, 151, 58]), geo, img_spacing)
-    myhdr = create_seg_hdr(hdr, seg_hdr, spider, [200, 2000])
-    nrrd.write(join(wd, 'pt_{0}\\spider_{1}.nrrd'.format(pt, app)), spider.astype('uint8'), myhdr)
+#    spider = create_spider_map(csv, np.array([72, 151, 58]), geo, img_spacing)
+#    myhdr = create_seg_hdr(hdr, seg_hdr, spider, [200, 2000])
+#    nrrd.write(join(wd, 'pt_{0}\\spider_{1}.nrrd'.format(pt, app)), spider.astype('uint8'), myhdr)
 
 
 #    spider = create_spider_map(csv, np.array([275, 312, 200]), geo, img_spacing)
