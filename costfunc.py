@@ -274,62 +274,6 @@ class CostFunc:
 
         return costvalue, out_dict
 
-    def evaluate_cost(self): # TODO delete
-        """
-        Evaluates the cost function based on tissue classes
-        :return: costvalue
-        """
-
-        # return an inferior costvale for the function if it intersects any critical structures
-        crit_stuct = binarize_segmentation(self.seg_data, [self.lut[s] for s,v in self.lut.items() if self.group_table[s]["Class"] == "Critical"])
-        if check_intersect(crit_stuct, self.cyl):
-            print("intersection with crit structures")
-            costvalue = np.inf
-            self.cost = costvalue
-            return costvalue
-
-        # get distance maps
-        dist_scores = []
-        for name, dist_map in self.dist_maps.items():
-            intersect = dist_map*self.cyl
-            min_dist = np.min(intersect[intersect > 0])
-            if min_dist < self.dist_dict[name]["Min_Distance"]:
-                costvalue = np.inf
-                self.cost = costvalue
-                return costvalue
-            dist_scores.append(min_dist * self.weight_table[name]["Factor"]) #TODO give scalar value to increase the weight of distance scores
-
-        self.micro_vtx, self.micro = SurgicalPath.create_microscope(self.entry_point, self.target_coords,
-                                                                    self.seg_data.shape, self.img_spacing)
-
-        # get deformable scores
-        def_scores = []
-        def_group = [k for k,v in self.group_table.items() if v["Class"] == "Deformable"]
-        for group in def_group:
-            def_grad = self.def_dict[group]
-            def_grad = self.weight_table[group]["Factor"] + def_grad * (1/10)
-            def_intersect = check_intersect(def_grad, self.micro)
-            def_scores.append(def_intersect)
-
-        # get removable structures
-        remov_group = ["Tissue", "Bone"]
-        remov_scores = []
-        for group in remov_group:
-            remov_struct = binarize_segmentation(self.seg_data,
-                                                 [self.lut[s] for s in self.lut.keys() if self.group_table[s]["Group"] == group])
-            remov_intersect = check_intersect(remov_struct, self.micro)
-            remov_scores.append(remov_intersect *
-                                          self.weight_table[group]["Factor"])
-
-        # get target
-        target_struct = binarize_segmentation(self.seg_data, self.lut["Target"])
-        target_intersect = check_intersect(target_struct, self.micro)
-        target_score = target_intersect * self.weight_table["Target"]["Factor"]
-
-        costvalue = sum(def_scores + remov_scores + dist_scores + target_score)
-        self.cost = costvalue
-        return costvalue
-
     def save_paths(self, hdr, fextension):
         """
         save the  paths as images
