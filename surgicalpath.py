@@ -20,65 +20,6 @@ class Cylinder(object):
 
     def create_shape(self, num=20):
         """
-
-        THIS IS OUTDATED CODE WITH IMPROPER GEOMETRY
-
-        Creates the Cylinder shape
-        :param num:
-        :return:
-        """
-
-        # create the unit vector of the target and the entry points
-        vhat = self.targ - self.ep
-
-        rot1 = create_rotation_matrix(vhat,
-                                      [1, 0, 0])
-
-        target_coords_trans1 = self.targ - self.ep
-        tumor_coords_rot_to_x_axis = rot1.apply(target_coords_trans1)
-        tumor_center_rot_to_x_axis = rot1.apply(self.targ - self.ep)
-
-        x_max, y_max, z_max = find_extrema(tumor_coords_rot_to_x_axis, 'max')
-
-        x_offset = x_max - tumor_center_rot_to_x_axis[0]
-
-        # generate points for the disc in the x plane
-
-        y_circle, z_circle = create_circle(self.radii[0] / self.spacing[1], self.radii[0] / self.spacing[2],
-                                           n=num)  # calibrate radius based off of spacing
-        y_circle2, z_circle2 = create_circle(self.radii[1] / self.spacing[1], self.radii[1] / self.spacing[2],
-                                             n=num)  # calibrate radius based off of spacing
-        y_circle3, z_circle3 = create_circle(self.radii[2] / self.spacing[1], self.radii[2] / self.spacing[2],
-                                             n=num)  # calibrate radius based off of  spacing
-        path_length = np.linalg.norm(self.targ - self.ep) + x_offset
-        midpoint = path_length / 2
-        x_circle = np.tile(0, len(y_circle))
-        x_circle2 = np.tile(midpoint, len(y_circle2))
-        x_circle3 = np.tile(path_length, len(y_circle3))
-        circle1 = list(zip(x_circle, y_circle, z_circle))
-        circle2 = list(zip(x_circle2, y_circle2, z_circle2))
-        circle3 = list(zip(x_circle3, y_circle3, z_circle3))
-        cyl_coords_x_axis = np.vstack((circle1, circle2, circle3))
-
-        # create the rotation between x axis and path vector
-        rot2 = create_rotation_matrix([1, 0, 0],
-                                      vhat)
-        # apply the rotation
-        cyl_coords_rot = rot2.apply(cyl_coords_x_axis)
-
-        # translate disc coordinates after rotation they are no longer centered around origin
-        cyl_coords_rot_trans = cyl_coords_rot + self.ep
-
-        # append all the vertexes into a surgical vertex list
-        surgical_vertex = np.around(cyl_coords_rot_trans).astype(int)
-
-        voxelized_cylinder = create_voxelized_path(surgical_vertex, cyl_coords_rot_trans, self.geometry, t='bi-cone')
-
-        self.vtx = surgical_vertex
-        self.voxel = voxelized_cylinder
-
-    def create_shape2(self, num=20):
-        """
         Create a cone in the X plane first, then rotate it to the correct space
         This does not have an error with the geometry of the shape. It will have the correct X-Y dimensions
 
@@ -227,7 +168,7 @@ def create_voxelized_path(pts, geometry):
     within = tp[idx].T
     voxelized_path[within[0], within[1], within[2]] = True
 
-    # close shape to fill any holest
+    # close shape to fill any holes
     voxelized_path_closed = binary_closing(voxelized_path,
                                            structure=np.ones((5, 5, 5))
                                            ).astype(int)
