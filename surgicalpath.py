@@ -8,7 +8,7 @@ import nrrd
 
 
 class Cylinder(object):
-    """ Cylinder"""
+    """ Cylinder shape"""
 
     def __init__(self, entrypoint, target, r1, r2, r3, geometry, spacing):
 
@@ -71,10 +71,9 @@ class Cylinder(object):
         # store as numpy array
         cyl_coords_rot_scaled = np.asarray(cyl_coords_rot_scaled)
 
-        surgical_vertex = np.around(cyl_coords_rot_scaled).astype(int)
-        voxelized_cylinder = create_voxelized_path(surgical_vertex, cyl_coords_rot_scaled, self.geometry, t='bi-cone')
+        voxelized_cylinder = create_voxelized_path(cyl_coords_rot_scaled, self.geometry)
 
-        self.vtx = surgical_vertex
+        self.vtx = cyl_coords_rot_scaled
         self.voxel = voxelized_cylinder
 
     def save(self, hdr, fname):
