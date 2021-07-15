@@ -99,7 +99,8 @@ class CostFunc:
     def limit_cost(self):
         """
         the main cost calculation fo the algorithm. It runs thru all permuatations of the possible target points and entry points.
-        It takes all potential target points and generates the 16 point cylinder to calculate the cost.
+        It takes all potential target points and generates the 16 point cylinder to calculate the cost. adds results
+        to a pandas dataframe for manipulation and storage.
 
         Returns
         -------
@@ -124,14 +125,6 @@ class CostFunc:
 
             for crani_idx, crani_pt in enumerate(crani_pts):
 
-                """
-                # create 1 voxel cylinder which represents minimum path
-                cyl = Cylinder(crani_pt, tar_pt,
-                               self.lim_dict['cyl_radius'], self.lim_dict['cyl_radius'], self.lim_dict['cyl_radius'],
-                               self.seg_data.shape, self.img_spacing)
-                cyl.create_shape2(num=5)
-                """
-
                 # create the cone which represents costs
                 cone = Cylinder(crani_pt, tar_pt,
                                 self.lim_dict['crani_radius'], self.lim_dict['crani_radius']/2, self.lim_dict['cyl_radius'],
@@ -143,13 +136,8 @@ class CostFunc:
                 ser_df['targ'] = [tar_pt]
                 ser_df['crani'] = [crani_pt]
 
-
                 # calculate the cost of the cylinder through the deformable
                 cost, cost_dict = self.cyl_cost(cone.voxel, self.img_spacing)
-
-                # code to render the intersection of critical structures as infinity
-                #if np.any(np.logical_and(self.crit_struct, cyl.voxel)):
-                #    cost = np.inf
 
                 ser_df['cost'] = cost
                 for key, value in cost_dict.items():
@@ -179,17 +167,13 @@ class CostFunc:
         #get root
         root = pth.split('.csv')[0]
 
-        # save the weights
+        # save the weights into a json file
         weights = {}
         weights['weight table'] = self.weight_table
         weights['group table'] = self.group_table
         weights['limit dict'] = self.lim_dict
         with open(root+'_weights.json', 'w') as fp:
             json.dump(weights, fp, cls=NumpyEncoder, indent=4, sort_keys=True)
-
-        with open(pth, 'w') as fp:
-            json.dump(self.tar_dict, fp, cls=NumpyEncoder, indent=4, sort_keys=True)
-
 
     def save_dataframe(self, path):
         """function to save the dataframe as a csv so that it can be accessed again for computation"""
@@ -207,7 +191,7 @@ class CostFunc:
 
         #save the weight dictionaries for reference
         df = self.tar_df
-        df.to_csv(path, index=False, float_format='%.15f'.format, encoding='utf-8')
+        df.to_csv(path, index=False, float_format='%8f', encoding='utf-8')
 
     def cyl_cost(self, cyl, im_spacing):
         """

@@ -1,5 +1,8 @@
 import numpy as np
 
+"""
+Code that could be used to randomly search for the optimal cranitomy search points"""
+
 class CraniBounds(object):
 
     def __init__(self, testpoints):

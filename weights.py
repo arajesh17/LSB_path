@@ -1,4 +1,3 @@
-from numpy import inf
 # all values are in mm
 microscope_dict = {"Radius": 35,
                    "Focal Length": 300,

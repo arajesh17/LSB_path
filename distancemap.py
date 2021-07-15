@@ -4,6 +4,8 @@ from time import time
 from loaddata import LoadData
 from utils import binarize_segmentation, in2d_unsorted, unique2d
 
+"""
+Code that can be implemented to include a distance map -- then could be inputted into the cost function as a parameter"""
 
 class DistanceMap(object):
 
@@ -92,3 +94,34 @@ class DistanceMap(object):
         im[self.segcoords.T[0], self.segcoords.T[1], self.segcoords.T[2]] = 0
 
         return im
+
+    def get_distmaps(self, dist_map_dict, LSB_class_group, lut):
+
+        """
+
+        Code to create the distance map dictionary and store it into the class. This creates a distance map to the
+        critical structures for each class of structures listed in the dist_map_dict
+
+        Parameters
+        ----------
+        dist_map_dict
+        LSB_class_group
+        lut
+        seg_data
+        img_spacing
+
+        Returns
+        -------
+
+        """
+
+        dist_maps = {}
+
+        for name, subdict in dist_map_dict.items():
+            group_memb = [key for key, value in LSB_class_group.items() if value["Group"] == subdict["Group"]]
+            binarized_group = binarize_segmentation(self.segdata, [lut[g] for g in group_memb])
+            dm = DistanceMap(binarized_group, subdict["Max_Distance"], self.imspacing)
+            group_dist = dm.cdist("euclidean")
+            dist_maps[name] = group_dist
+
+        self.distmaps = dist_maps

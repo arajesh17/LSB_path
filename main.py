@@ -59,18 +59,13 @@ for pt in pt_list:
 
 
     # create distance maps currently not in the code but can be added if distance is a parameter
-    dist_maps = {}
-    for name, subdict in dist_map_dict.items():
-        group_memb = [key for key, value in LSB_class_group.items() if value["Group"] == subdict["Group"]]
-        binarized_group = binarize_segmentation(seg_data, [lut[g] for g in group_memb])
-        dm = DistanceMap(binarized_group, subdict["Max_Distance"], img_spacing)
-        group_dist = dm.cdist("euclidean")
-        dist_maps[name] = group_dist
+    dm = DistanceMap(seg_data, '5' , img_spacing)
+    dm.get_distmaps()
 
-    MCF_cf = CostFunc(MCF_entry, seg_data, lut, dist_maps, gradient_maps, img_spacing)
+    MCF_cf = CostFunc(MCF_entry, seg_data, lut, dm.distmaps, gradient_maps, img_spacing)
     MCF_cf.limit_cost()
     MCF_cf.save_dataframe(MCF_pth)
 
-    RS_cf = CostFunc(RS_entry, seg_data, lut, dist_maps, gradient_maps, img_spacing)
+    RS_cf = CostFunc(RS_entry, seg_data, lut, dm.distmaps, gradient_maps, img_spacing)
     RS_cf.limit_cost()
     RS_cf.save_dataframe(RS_pth)
